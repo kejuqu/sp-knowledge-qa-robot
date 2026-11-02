@@ -1,0 +1,34 @@
+{
+  "name": "@kqa/ai",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./models": "./src/models.ts",
+    "./vector-store": "./src/vector-store.ts",
+    "./rag": "./src/rag.ts",
+    "./ingest": "./src/ingest.ts",
+    "./parsers": "./src/parsers.ts"
+  },
+  "dependencies": {
+    "@kqa/db": "workspace:*",
+    "@langchain/core": "^0.3.58",
+    "@langchain/openai": "^0.5.10",
+    "@langchain/textsplitters": "^0.1.0",
+    "cheerio": "^1.0.0",
+    "langchain": "^0.3.29",
+    "mammoth": "^1.9.0",
+    "pdf-parse": "^1.1.1",
+    "sanitize-html": "^2.18.1",
+    "turndown": "^7.2.4",
+    "turndown-plugin-gfm": "^1.0.2"
+  },
+  "devDependencies": {
+    "@kqa/tsconfig": "workspace:*",
+    "@types/pdf-parse": "^1.1.5",
+    "@types/sanitize-html": "^2.16.2",
+    "@types/turndown": "^5.0.6",
+    "typescript": "^5.8.0"
+  }
+}

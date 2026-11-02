@@ -1,0 +1,15 @@
+node_modules
+.next
+dist
+.turbo
+.env
+.env.local
+*.tsbuildinfo
+.DS_Store
+drizzle/meta
+
+# Legacy migration backups include private data and password hashes
+.migration-backups/
+supabase/.temp/
+
+.env.*.local

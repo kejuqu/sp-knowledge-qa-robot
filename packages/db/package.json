@@ -1,0 +1,24 @@
+{
+  "name": "@kqa/db",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts",
+    "./notifications": "./src/notifications.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.118.0"
+  },
+  "devDependencies": {
+    "@kqa/tsconfig": "workspace:*",
+    "typescript": "^5.8.0",
+    "postgres": "3.4.9",
+    "@types/node": "^22.15.0"
+  }
+}

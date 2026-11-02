@@ -1,0 +1,340 @@
+@import "tailwindcss";
+
+/*
+ * monorepo 关键配置：Tailwind v4 自动扫描会以 node_modules 软链为由跳过 workspace 包，
+ * 必须显式声明源路径（相对于本 CSS 文件）：
+ * - "."            -> @kqa/ui 自己的组件
+ * - apps/web|auth  -> 两个应用里的页面/组件类名
+ */
+@source ".";
+@source "../../../apps/web/src";
+@source "../../../apps/auth/src";
+
+:root {
+  color-scheme: light;
+  /* hsl(0 9% 98%) converted to OKLCH: a neutral, slightly warm white. */
+  --background: oklch(0.984 0.001 17.2);
+  --foreground: oklch(0.22 0.035 158);
+  --card: oklch(1 0.012 158 / 0.88);
+  --card-foreground: oklch(0.22 0.035 158);
+  --popover: oklch(1 0.012 158 / 0.96);
+  --popover-foreground: oklch(0.22 0.035 158);
+  /* 半透明翠绿：按钮、选中态与进度条共享同一主题色。 */
+  --primary: oklch(0.49 0.13 158 / 0.86);
+  --primary-foreground: oklch(0.99 0.01 155);
+  /* 主题色背景按钮的文字色，明暗主题均保持白色。 */
+  --theme-foreground: oklch(1 0 0);
+  --secondary: oklch(0.96 0.03 158 / 0.72);
+  --secondary-foreground: oklch(0.25 0.05 158);
+  --muted: oklch(0.97 0.018 158 / 0.7);
+  --muted-foreground: oklch(0.49 0.025 158);
+  --accent: oklch(0.97 0.018 158);
+  --accent-foreground: oklch(0.25 0.06 158);
+  --destructive: oklch(0.577 0.245 27.325);
+  --theme-border: oklch(0.84 0.035 158 / 0.72);
+  --border: var(--theme-border);
+  --input: oklch(0.84 0.035 158 / 0.72);
+  --ring: oklch(0.56 0.12 158 / 0.7);
+  --sidebar: oklch(91.513% 0.00323 15.446);
+  --sidebar-foreground: oklch(0.22 0.035 158);
+  --sidebar-primary: oklch(0.49 0.13 158);
+  --sidebar-primary-foreground: oklch(0.99 0.01 155);
+  --sidebar-accent: oklch(0.97 0.018 158);
+  --sidebar-accent-foreground: oklch(0.25 0.06 158);
+  --sidebar-border: oklch(0.84 0.035 158);
+  --radius: 0.625rem;
+}
+
+:root[data-theme="dark"],
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.68 0.14 158 / 0.86);
+  --primary-foreground: oklch(0.16 0.025 158);
+  --secondary: oklch(0.29 0.04 158 / 0.82);
+  --secondary-foreground: oklch(0.96 0.02 158);
+  --muted: oklch(0.25 0.025 158 / 0.82);
+  --muted-foreground: oklch(0.76 0.035 158);
+  --accent: oklch(0.34 0.06 158 / 0.82);
+  --accent-foreground: oklch(0.97 0.02 158);
+  --destructive: oklch(0.704 0.191 22.216);
+  --theme-border: oklch(0.75 0.06 158 / 0.2);
+  --border: var(--theme-border);
+  --input: oklch(0.75 0.06 158 / 0.24);
+  --ring: oklch(0.68 0.14 158 / 0.7);
+  --sidebar: oklch(0.17 0 0);
+  --sidebar-foreground: oklch(0.97 0 0);
+  --sidebar-primary: oklch(0.68 0.14 158);
+  --sidebar-primary-foreground: oklch(0.16 0.025 158);
+  --sidebar-accent: oklch(0.34 0.06 158 / 0.82);
+  --sidebar-accent-foreground: oklch(0.98 0.01 158);
+  --sidebar-border: oklch(0.31 0 0);
+}
+
+/* 未设置偏好时直接使用操作系统主题，避免客户端脚本接管前出现闪烁。 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.68 0.14 158 / 0.86);
+    --primary-foreground: oklch(0.16 0.025 158);
+    --secondary: oklch(0.29 0.04 158 / 0.82);
+    --secondary-foreground: oklch(0.96 0.02 158);
+    --muted: oklch(0.25 0.025 158 / 0.82);
+    --muted-foreground: oklch(0.76 0.035 158);
+    --accent: oklch(0.34 0.06 158 / 0.82);
+    --accent-foreground: oklch(0.97 0.02 158);
+    --destructive: oklch(0.704 0.191 22.216);
+    --theme-border: oklch(0.75 0.06 158 / 0.2);
+    --border: var(--theme-border);
+    --input: oklch(0.75 0.06 158 / 0.24);
+    --ring: oklch(0.68 0.14 158 / 0.7);
+    --sidebar: oklch(0.17 0 0);
+    --sidebar-foreground: oklch(0.97 0 0);
+    --sidebar-primary: oklch(0.68 0.14 158);
+    --sidebar-primary-foreground: oklch(0.16 0.025 158);
+    --sidebar-accent: oklch(0.34 0.06 158 / 0.82);
+    --sidebar-accent-foreground: oklch(0.98 0.01 158);
+    --sidebar-border: oklch(0.31 0 0);
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-theme-foreground: var(--theme-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-theme-border: var(--theme-border);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* 统一操作控件的默认光标，拖拽等显式 cursor 工具类仍可覆盖。 */
+@layer base {
+  /* Tailwind v4 的默认边框为 currentColor，统一使用主题色，工具类仍可覆盖。 */
+  *, ::before, ::after, ::backdrop {
+    border-color: var(--theme-border);
+  }
+
+
+  :where(
+    button,
+    a[href],
+    summary,
+    select,
+    label[for],
+    input:is([type="button"], [type="submit"], [type="reset"], [type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="color"]),
+    [role="button"],
+    [role="link"],
+    [role="tab"],
+    [role="menuitem"],
+    [role="menuitemcheckbox"],
+    [role="menuitemradio"],
+    [role="option"],
+    [role="checkbox"],
+    [role="radio"],
+    [role="switch"],
+    [role="combobox"]
+  ) {
+    cursor: pointer;
+  }
+}
+
+/* 禁用控件仍需接收鼠标命中才能显示 not-allowed。
+   原生 disabled 和各交互组件的禁用逻辑负责阻止操作。 */
+:is(:disabled, [aria-disabled="true"], [data-disabled]:not([data-disabled="false"])) {
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+.app-shell {
+  background: var(--background);
+}
+
+/* 收缩侧栏只保留图标，避免品牌和租户文字挤压出布局。 */
+[data-slot="sidebar"][data-state="collapsed"] [data-sidebar-label] {
+  display: none;
+}
+
+/* 文档预览面板拖拽中（html[data-panel-resizing]，由 PanelResizeHandle 设置）：
+   全局切换拖拽光标、禁止文本选中。 */
+html[data-panel-resizing] {
+  cursor: col-resize;
+}
+
+html[data-panel-resizing] body {
+  user-select: none;
+}
+
+/* AI 思考中指示器：三点错峰弹跳（transform/opacity only），尊重减弱动效偏好。 */
+.thinking-dot {
+  animation: thinking-bounce 1.2s ease-in-out infinite;
+}
+
+@keyframes thinking-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking-dot {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* 高级空状态：入场渐显 + 光晕呼吸 + 环绕虚线，仅 transform/opacity，尊重减弱动效偏好。 */
+@keyframes empty-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes empty-glow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes empty-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty-state {
+  animation: empty-enter 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.empty-state .empty-glow {
+  animation: empty-glow 4.5s ease-in-out infinite;
+}
+
+.empty-state .empty-orbit {
+  animation: empty-orbit 28s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty-state,
+  .empty-state .empty-glow,
+  .empty-state .empty-orbit {
+    animation: none;
+  }
+}
+
+/* 聊天区继承全局主题，输入框使用卡片背景。 */
+.chat-page {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.chat-page .chat-composer {
+  height: 144px;
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 18px 36px -20px oklch(0.26 0.012 17.2 / 0.34);
+}
+
+:root[data-theme="dark"] .chat-page .chat-composer {
+  box-shadow: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .chat-page .chat-composer {
+    box-shadow: none;
+  }
+}
+
+.chat-composer .chat-composer-input {
+  background: transparent;
+  color: var(--foreground);
+  font-size: 16px;
+  line-height: 1.4;
+  field-sizing: fixed;
+}
+
+.chat-composer-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.chat-composer .chat-composer-upload {
+  border: 0;
+  color: var(--muted-foreground);
+}
+
+.chat-composer .chat-composer-send {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.chat-composer .chat-composer-send:disabled {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  opacity: 1;
+}
+
+.chat-composer .chat-composer-send:not(:disabled):hover {
+  background: color-mix(in oklab, var(--primary) 90%, var(--background));
+}
+
+.chat-composer-upload svg,
+.chat-composer-send svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}

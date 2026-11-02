@@ -1,0 +1,86 @@
+import { getTenantUser } from "@/lib/tenant-user";
+import { NextResponse } from "next/server";
+import { result } from "@kqa/db";
+import { getSupabaseServerClient } from "@kqa/auth/next";
+import { streamRagAnswer } from "@kqa/ai";
+import { getModelConfigForTenant } from "@/lib/model-config";
+
+/**
+ * POST /api/chat
+ * body: { conversationId?: string, message: string, documentIds?: string[] }
+ * 响应：text/plain 流（首个 chunk 前先发一行 JSON 元信息：会话、用户消息和引用 ID）
+ */
+export async function POST(request: Request) {
+  const user = await getTenantUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const client=await getSupabaseServerClient();
+  const { conversationId, message, documentIds } = await request.json();
+  if (typeof message !== "string" || !message.trim() || message.length > 20000) {
+    return NextResponse.json({ error: "message is required" }, { status: 400 });
+  }
+
+  // 没有会话就新建，标题取问题前 20 字
+  let convId = conversationId as string | undefined;
+  if (convId) {
+    if (typeof convId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(convId)) {
+      return NextResponse.json({ error: "invalid id" }, { status: 400 });
+    }
+    const conversation=await result(client.from("conversations").select("id").eq("id",convId).eq("owner_id",user.sub).maybeSingle());
+    if (!conversation) return NextResponse.json({ error: "对话不存在" }, { status: 404 });
+  }
+  if (!convId) {
+    const conv=await result(client.from("conversations").insert({owner_id:user.sub,title:message.slice(0,20)}).select("id").single());
+    if (!conv) throw new Error("无法创建对话");
+    convId = conv.id;
+  }
+
+  const userMessage=await result(client.from("messages").insert({conversation_id:convId,role:"user",content:message}).select("id").single());
+
+  if (!userMessage) throw new Error("无法保存消息");
+  const requestedDocumentIds = Array.isArray(documentIds)
+    ? documentIds.filter((id): id is string => typeof id === "string" && /^[0-9a-f-]{36}$/i.test(id)).slice(0, 50)
+    : [];
+  const permittedDocumentIds = requestedDocumentIds.length
+    ? ((await result(client.from("documents").select("id").eq("tenant_id",user.tenantId).is("deleted_at",null).eq("status","ready").in("id",requestedDocumentIds))) ?? []).map((document)=>document.id)
+    : [];
+  const config = await getModelConfigForTenant(user.tenantId);
+  const { stream, citations } = await streamRagAnswer(
+    message,
+    user.tenantId,
+    config,
+    documentIds === undefined ? null : permittedDocumentIds,
+    client
+  );
+
+  const metaLine = JSON.stringify({
+    conversationId: convId,
+    userMessageId: userMessage.id,
+    citations,
+  }) + "\n";
+  const encoder = new TextEncoder();
+  const finalConvId = convId;
+
+  const readable = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      controller.enqueue(encoder.encode(metaLine));
+      let full = "";
+      try {
+        for await (const chunk of stream) {
+          full += chunk;
+          controller.enqueue(encoder.encode(chunk));
+        }
+        // 流结束后把完整回答落库
+        await result(client.from("messages").insert({conversation_id:finalConvId,role:"assistant",content:full,citations}));
+      } catch (err) {
+        controller.error(err);
+        return;
+      }
+      controller.close();
+    },
+  });
+
+  return new Response(readable, {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
+}

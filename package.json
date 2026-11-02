@@ -1,0 +1,24 @@
+{
+  "name": "knowledge-qa-assistant",
+  "private": true,
+  "packageManager": "pnpm@11.0.9",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "supabase migration new",
+    "db:migrate": "node --env-file=.env scripts/migrate-supabase.mjs",
+    "test:db": "node --env-file=.env scripts/test-supabase.mjs",
+    "migrate:legacy": "node --env-file=.env scripts/migrate-legacy.mjs",
+    "ingest:pending": "node --env-file=.env --import tsx scripts/process-document-jobs.ts",
+    "supabase:start": "node scripts/start-local-supabase.mjs",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "supabase:env": "node scripts/local-supabase-env.mjs"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "tsx": "4.23.15"
+  }
+}
