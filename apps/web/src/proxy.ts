@@ -68,6 +68,8 @@ export async function proxy(request: NextRequest) {
 }
 export const config = {
   matcher: [
-    "/((?!_next/|__nextjs_font/|favicon\\.ico$|icon\\.png$|robots\\.txt$|sitemap\\.xml$).*)",
+    // Public auth routes must never enter the auth gate, including on Vercel.
+    // Keep exact boundaries so /api/signup/unknown stays protected.
+    "/((?!signin$|signup$|auth/confirm$|api/signin$|api/signup$|api/signup/send-code$|api/auth/session$|api/auth/confirm$|api/auth/callback$|_next/|__nextjs_font/|favicon\\.ico$|icon\\.png$|robots\\.txt$|sitemap\\.xml$).*)",
   ],
 };

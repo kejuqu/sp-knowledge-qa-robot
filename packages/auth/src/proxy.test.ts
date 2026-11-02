@@ -23,5 +23,7 @@ describe("Supabase proxy",()=>{
  it("只有员工导入 POST 可交给 Bearer 路由鉴权",async()=>{const headers={authorization:"Bearer invalid"};expect((await proxy(req("/api/team/import",{method:"POST",headers}))).headers.get("x-middleware-next")).toBe("1");expect((await proxy(req("/api/team",{method:"POST",headers}))).status).toBe(401);expect((await proxy(req("/api/team/import",{headers}))).status).toBe(401);});
  it("任务入口仍由路由校验 cron secret",async()=>{expect((await proxy(req("/api/internal/ingest"))).headers.get("x-middleware-next")).toBe("1");});
  it.each(["/chat","/api/documents/a/retry","/settings"])("保护 %s",url=>{expect(unstable_doesMiddlewareMatch({config,nextConfig:{},url})).toBe(true);});
+ it.each(["/signin", "/signin?next=/chat", "/signup", "/auth/confirm", "/api/signin", "/api/signup", "/api/signup/send-code", "/api/auth/session", "/api/auth/confirm", "/api/auth/callback"])("公开认证入口不进入拦截器 %s",url=>{expect(unstable_doesMiddlewareMatch({config,nextConfig:{},url})).toBe(false);});
+ it.each(["/signin-extra", "/api/signup/unknown", "/api/auth/unknown", "/api/password", "/set-password"])("公开入口相邻路径仍匹配鉴权 %s",url=>{expect(unstable_doesMiddlewareMatch({config,nextConfig:{},url})).toBe(true);});
  it.each(["/_next/static/chunk.js","/icon.png","/favicon.ico"])("放行静态资源 %s",url=>{expect(unstable_doesMiddlewareMatch({config,nextConfig:{},url})).toBe(false);});
 });
