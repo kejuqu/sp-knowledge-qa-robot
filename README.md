@@ -1,5 +1,7 @@
 # 企业知识问答助手（Knowledge QA Assistant）
 
+线上演示部署见 [Vercel 免费地址 + Supabase 部署指南](docs/deploy-vercel.md)。`apps/web` 已包含同域认证入口，线上只需部署一个 Next.js 应用；本地仍支持下面的双应用运行方式。
+
 基于 Next.js App Router、React、Supabase JS 和 LangChain 的多租户 RAG 应用。上传文档后，原文件存入 **Supabase Storage**，解析文本存入 **PostgreSQL**，向量分块存入同一数据库的 **pgvector**；问答时按团队和文档权限召回，流式生成答案并展示引用。
 
 > 默认使用**当前项目独立的本地 Supabase**：PostgreSQL、pgvector、Auth 和 Storage 全部运行于本机 Docker，和线上项目隔离。`supabase-js` 是应用使用的客户端 SDK；本地服务由 Supabase CLI 启动。旧 Postgres / Redis / Milvus / MinIO 配置保存在 [docs/legacy/docker-compose.yml](docs/legacy/docker-compose.yml)，仅供旧数据迁移参考。

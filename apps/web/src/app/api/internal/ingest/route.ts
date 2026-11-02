@@ -7,5 +7,5 @@ export async function POST(request:Request) {
  const provided=request.headers.get("authorization")??"";
  const expected=`Bearer ${secret}`;
  if(!secret || Buffer.byteLength(provided)!==Buffer.byteLength(expected) || !timingSafeEqual(Buffer.from(provided),Buffer.from(expected))) return Response.json({error:"unauthorized"},{status:401});
- return Response.json({processed:await processDocumentJobs(3)});
+ return Response.json({processed:await processDocumentJobs(1)});
 }

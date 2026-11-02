@@ -1,5 +1,5 @@
 import { getTenantUser } from "@/lib/tenant-user";
-import { rows, type Document } from "@kqa/db";
+import { rows, result, type Document } from "@kqa/db";
 import { getSupabaseServerClient } from "@kqa/auth/next";
 import { renderDocxPreviewHtml, renderSafePreviewHtml, DOCX_PREVIEW_CSP } from "@kqa/ai";
 import { getPreviewType } from "@/lib/utils";
@@ -76,6 +76,15 @@ export async function GET(
 
   if ((shouldDownload || isPdf) && (document.objectKey || document.fileData)) {
     try {
+      if (document.objectKey) {
+        const signed = await result(client.storage.from("kqa-documents").createSignedUrl(
+          document.objectKey, 60, shouldDownload ? { download: document.filename } : {},
+        ));
+        if (!signed) throw new Error("Missing download URL");
+        return new Response(null, { status: 302, headers: {
+          Location: signed.signedUrl, "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer",
+        } });
+      }
       const body = document.objectKey
         ? await readDocumentObject(document.objectKey,client)
         : document.fileData!;

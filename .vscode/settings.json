@@ -1,0 +1,24 @@
+{
+  "files.watcherExclude": {
+    "**/.git/**": true,
+    "**/.claude/**": true,
+    "**/.next/**": true,
+    "**/.turbo/**": true,
+    "**/node_modules/**": true
+  },
+  "search.exclude": {
+    "**/.git/**": true,
+    "**/.claude/**": true,
+    "**/.next/**": true,
+    "**/.turbo/**": true,
+    "**/node_modules/**": true
+  },
+  "files.exclude": {
+    "**/.claude/**": true,
+    "**/.next/**": true,
+    "**/.turbo/**": true,
+    "**/node_modules/**": true
+  },
+  "git.autorefresh": false,
+  "claudeCode.autosave": false
+}

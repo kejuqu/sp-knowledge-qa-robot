@@ -10,6 +10,12 @@ import {config,proxy} from "../../../apps/web/src/proxy";
 const req=(path:string,init?:RequestInit)=>new NextRequest(`http://app.lvh.me:3100${path}`,init);
 beforeEach(()=>{process.env.SUPABASE_URL="http://127.0.0.1:55321";process.env.SUPABASE_PUBLISHABLE_KEY="test";process.env.AUTH_APP_URL="http://auth.lvh.me:3001";process.env.APP_ENV="local";state.user=null;state.refresh=false;});
 describe("Supabase proxy",()=>{
+ it.each(["/signin", "/signup", "/auth/confirm", "/api/signin", "/api/signup", "/api/auth/callback", "/api/auth/session", "/api/auth/confirm"])("允许匿名访问认证入口 %s",async(path)=>{
+  expect((await proxy(req(path))).headers.get("x-middleware-next")).toBe("1");
+ });
+ it.each(["/api/signup/unknown", "/api/auth/unknown", "/api/password", "/set-password"])("认证相邻路径仍受保护 %s",async(path)=>{
+  expect((await proxy(req(path))).headers.get("x-middleware-next")).toBeNull();
+ });
  it("匿名页面跳转登录",async()=>{const response=await proxy(req("/chat"));expect(response.status).toBe(307);expect(response.headers.get("location")).toBe("http://auth.lvh.me:3001/signin");});
  it("伪造旧 JWT 不能绕过 Supabase Auth",async()=>{expect((await proxy(req("/api/documents",{headers:{cookie:"kqa_session=forged"}}))).status).toBe(401);});
  it("邮箱未验证时拒绝业务请求",async()=>{state.user={id:"u1",email_confirmed_at:null};expect((await proxy(req("/api/documents"))).status).toBe(401);});

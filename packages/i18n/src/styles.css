@@ -1,0 +1,15 @@
+/* System fonts provide CJK glyphs without downloading large font files. */
+html:lang(ja-JP) body {
+  font-family: Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  line-break: strict;
+}
+html:lang(zh-CN) body {
+  font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+html:lang(en-US) body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+/* Long translations should wrap within their container rather than widen it. */
+:where(h1, h2, h3, [data-slot="field-description"]) {
+  overflow-wrap: anywhere;
+}

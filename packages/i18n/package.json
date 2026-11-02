@@ -1,0 +1,24 @@
+{
+  "name": "@kqa/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/client.ts",
+    "./server": "./src/server.ts",
+    "./config": "./src/config.ts",
+    "./actions": "./src/actions.ts",
+    "./language-select": "./src/language-select.tsx",
+    "./styles.css": "./src/styles.css"
+  },
+  "dependencies": {
+    "next-intl": "4.14.9"
+  },
+  "peerDependencies": {
+    "next": "^16.4.3",
+    "react": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0"
+  }
+}

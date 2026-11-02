@@ -28,5 +28,5 @@ export async function processDocumentJobs(maxJobs=3) {
 
 /** Next.js keeps the response alive; a cron endpoint recovers jobs after worker crashes/timeouts. */
 export function enqueueDocument() {
- after(async()=>{await processDocumentJobs().catch((error)=>console.error("Document worker failed",error instanceof Error?error.name:"UnknownError"));});
+ after(async()=>{await processDocumentJobs(1).catch((error)=>console.error("Document worker failed",error instanceof Error?error.name:"UnknownError"));});
 }

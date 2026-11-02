@@ -4,6 +4,7 @@ import * as React from "react";
 import { ChevronsLeft, ChevronsRight, Menu, X } from "lucide-react";
 import { TooltipHint, TooltipProvider } from "./tooltip";
 import { cn } from "../lib/utils";
+import { useUIStrings } from "./ui-strings";
 import { Button } from "./button";
 
 const DEFAULT_WIDTH = 300;
@@ -174,6 +175,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 
 /** A middle rail supports both pointer resizing and one-click collapse/expand. */
 function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
+  const labels = useUIStrings();
   const { collapsed, setCollapsed, setWidth, toggleSidebar, width, isMobile } =
     useSidebar();
   const dragStart = React.useRef<{ x: number; width: number } | null>(null);
@@ -219,14 +221,14 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
       }}
       role="separator"
       aria-orientation="vertical"
-      aria-label="调整侧栏宽度"
+      aria-label={labels.resizeSidebar}
       aria-valuemin={MIN_WIDTH}
       aria-valuemax={MAX_WIDTH}
       aria-valuenow={width}
       tabIndex={0}
       {...props}
     >
-      <TooltipHint content={collapsed ? "展开侧栏" : "收起侧栏"} side="right">
+      <TooltipHint content={collapsed ? labels.expandSidebar : labels.collapseSidebar} side="right">
         <button
           type="button"
           className={cn(
@@ -235,7 +237,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
           )}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={toggleSidebar}
-          aria-label={collapsed ? "展开侧栏" : "收起侧栏"}
+          aria-label={collapsed ? labels.expandSidebar : labels.collapseSidebar}
         >
           {collapsed ? (
             <ChevronsRight className="size-4" />
@@ -249,6 +251,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function SidebarMobileTrigger() {
+  const labels = useUIStrings();
   const { isMobile, mobileOpen, setMobileOpen } = useSidebar();
   if (!isMobile || mobileOpen) return null;
 
@@ -257,7 +260,7 @@ function SidebarMobileTrigger() {
       type="button"
       className="fixed left-3 top-3 z-[60] flex size-10 items-center justify-center rounded-xl bg-sidebar text-sidebar-foreground shadow-md"
       onClick={() => setMobileOpen(true)}
-      aria-label="打开导航"
+      aria-label={labels.openNavigation}
     >
       <Menu className="size-5" />
     </button>
@@ -265,19 +268,21 @@ function SidebarMobileTrigger() {
 }
 
 function SidebarMobileClose() {
+  const labels = useUIStrings();
   const { isMobile, setMobileOpen } = useSidebar();
   if (!isMobile) return null;
   return (
-    <Button variant="ghost" size="icon" className="size-10 shrink-0 rounded-xl" onClick={() => setMobileOpen(false)} aria-label="关闭导航">
+    <Button variant="ghost" size="icon" className="size-10 shrink-0 rounded-xl" onClick={() => setMobileOpen(false)} aria-label={labels.closeNavigation}>
       <X data-icon="inline-start" />
     </Button>
   );
 }
 
 function SidebarMobileOverlay() {
+  const labels = useUIStrings();
   const { isMobile, mobileOpen, setMobileOpen } = useSidebar();
   if (!isMobile || !mobileOpen) return null;
-  return <button type="button" className="fixed inset-0 z-40 bg-foreground/30" onClick={() => setMobileOpen(false)} aria-label="关闭导航遮罩" />;
+  return <button type="button" className="fixed inset-0 z-40 bg-foreground/30" onClick={() => setMobileOpen(false)} aria-label={labels.closeOverlay} />;
 }
 
 export {

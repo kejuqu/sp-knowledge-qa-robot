@@ -15,7 +15,8 @@
     "supabase:start": "node scripts/start-local-supabase.mjs",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
-    "supabase:env": "node scripts/local-supabase-env.mjs"
+    "supabase:env": "node scripts/local-supabase-env.mjs",
+    "test:i18n": "node --import tsx --test packages/i18n/tests/i18n.test.ts"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
