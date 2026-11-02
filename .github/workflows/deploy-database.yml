@@ -2,10 +2,10 @@ name: Deploy database migrations
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
     paths:
-      - 'supabase/migrations/**'
-      - '.github/workflows/deploy-database.yml'
+      - "supabase/migrations/**"
+      - ".github/workflows/deploy-database.yml"
   workflow_dispatch:
 
 permissions:
@@ -18,7 +18,7 @@ concurrency:
 jobs:
   deploy:
     name: Apply production migrations
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
