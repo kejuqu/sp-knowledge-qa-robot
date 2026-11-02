@@ -13,3 +13,4 @@ drizzle/meta
 supabase/.temp/
 
 .env.*.local
+.env.**
