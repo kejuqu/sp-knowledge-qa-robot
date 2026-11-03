@@ -3,10 +3,12 @@ import { useI18n } from "@kqa/i18n";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageScroller } from "@shadcn/react/message-scroller";
+import { MessageScroller, useMessageScroller } from "@shadcn/react/message-scroller";
 import { TooltipHint } from "@kqa/ui/components/tooltip";
 import { Skeleton } from "@kqa/ui/components/skeleton";
+import { toast } from "@kqa/ui/components/sonner";
 import { Button } from "@kqa/ui/components/button";
+import { Textarea } from "@kqa/ui/components/textarea";
 import {
   InputGroup,
   InputGroupAddon,
@@ -15,6 +17,8 @@ import {
 } from "@kqa/ui/components/input-group";
 import {
   ArrowDown,
+  Pencil,
+  Square,
   ArrowUp,
   ArrowUpRight,
   Bot,
@@ -109,10 +113,36 @@ function ChatContent() {
       // localStorage 不可用时忽略
     }
   }
+  const abortRequest = useRef<AbortController | null>(null);
+  useEffect(
+    () => () => {
+      abortRequest.current?.abort();
+    },
+    [],
+  );
   const [input, setInput] = useState("");
   const [liveAnswer, setLiveAnswer] = useState("");
+  const renderIds = useRef(new Map<string, string>());
+  const liveRenderId = useRef("live-answer");
+  const [editingTurn, setEditingTurn] = useState<{
+    questionId: string;
+    answerId?: string;
+    content: string;
+  } | null>(null);
+  const [highlightedAnswer, setHighlightedAnswer] = useState<{
+    ids: string[];
+    revision: number;
+  } | null>(null);
+  useEffect(() => {
+    if (!highlightedAnswer) return;
+    const timer = window.setTimeout(() => setHighlightedAnswer(null), 3000);
+    return () => window.clearTimeout(timer);
+  }, [highlightedAnswer]);
   const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
-  const [sendError, setSendError] = useState("");
+  const [settledMessageAnchor, setSettledMessageAnchor] = useState<{
+    id: string;
+    conversationId: string;
+  } | null>(null);
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedKnowledgeBaseIds, setSelectedKnowledgeBaseIds] = useState<string[]>([]);
   const [activeCitations, setActiveCitations] = useState<ActiveCitation | null>(null);
@@ -169,37 +199,75 @@ function ChatContent() {
     enabled: !!activeConversationId,
   });
   // 同一条用户消息一旦已从服务端历史中读到，就用服务端版本替换本地占位，避免重复。
-  const visibleHistory = useMemo(
-    () =>
-      history.filter(
-        (message) => !pendingMessages.some((pending) => pending.serverMessageId === message.id),
-      ),
-    [history, pendingMessages],
-  );
+  const visibleHistory = useMemo(() => {
+    const hidden = new Set<string>();
+    for (const pending of pendingMessages) {
+      if (!pending.serverMessageId) continue;
+      hidden.add(pending.serverMessageId);
+      const index = history.findIndex((item) => item.id === pending.serverMessageId);
+      if (index >= 0 && history[index + 1]?.role === "assistant") hidden.add(history[index + 1].id);
+    }
+    const items = history.filter((message) => !hidden.has(message.id));
+    if (!editingTurn) return items;
+    return items.flatMap((message): Message[] => {
+      if (message.id === editingTurn.questionId) {
+        const edited = { ...message, content: editingTurn.content };
+        return editingTurn.answerId
+          ? [edited]
+          : [edited, { id: "live", role: "assistant", content: liveAnswer }];
+      }
+      if (message.id === editingTurn.answerId)
+        return [{ ...message, content: liveAnswer, citations: null }];
+      return [message];
+    });
+  }, [history, pendingMessages, editingTurn, liveAnswer]);
   const visiblePendingMessages = pendingMessages.filter(
     (pending) => !pending.conversationId || pending.conversationId === activeConversationId,
   );
   const hasVisibleMessages = visibleHistory.length > 0 || visiblePendingMessages.length > 0;
-  async function send() {
-    const message = input.trim();
+  async function send(editedContent?: string, editMessageId?: string) {
+    const message = (editedContent ?? input).trim();
     if (!message || streaming) return;
+    const abort = new AbortController();
+    abortRequest.current = abort;
     const pendingId = `pending-${createPendingMessageId()}`;
+    liveRenderId.current = `${pendingId}-answer`;
     const requestConversationId = activeConversationId;
+    setSettledMessageAnchor(null);
     setInput("");
-    setSendError("");
-    // 立即显示用户气泡，不能等待会话创建、RAG 检索或首个流式 chunk。
-    setPendingMessages((current) => [
-      ...current,
-      { id: pendingId, role: "user", content: message, conversationId: requestConversationId },
-    ]);
+    if (editMessageId) setActiveCitations(null);
+    if (editMessageId) {
+      const index = history.findIndex((item) => item.id === editMessageId);
+      const answer = history[index + 1];
+      setEditingTurn({
+        questionId: editMessageId,
+        answerId: answer?.role === "assistant" ? answer.id : undefined,
+        content: message,
+      });
+    }
+    // Editing is rendered in place; only new questions append an optimistic bubble.
+    if (!editMessageId)
+      setPendingMessages((current) => [
+        ...current,
+        {
+          id: pendingId,
+          role: "user",
+          content: message,
+          conversationId: requestConversationId,
+          serverMessageId: editMessageId,
+        },
+      ]);
     setStreaming(true);
     setLiveAnswer("");
     let resolvedConversationId = requestConversationId;
+    let resolvedUserMessageId = editMessageId;
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
+        signal: abort.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          editMessageId,
           conversationId: requestConversationId,
           message,
           // 未指定文档时省略筛选，检索全部可访问知识；空数组会让后端跳过召回。
@@ -219,7 +287,7 @@ function ChatContent() {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-        // 第一个换行符之前是服务端发的 JSON 元信息（conversationId + citations）。
+        // 第一个换行符之前是服务端发的 JSON 元信息（conversationId + userMessageId）。
         if (!metaParsed) {
           const idx = buffer.indexOf("\n");
           if (idx === -1) continue;
@@ -230,6 +298,10 @@ function ChatContent() {
           buffer = buffer.slice(idx + 1);
           metaParsed = true;
           resolvedConversationId = meta.conversationId;
+          resolvedUserMessageId = meta.userMessageId;
+          if (!editMessageId) renderIds.current.set(meta.userMessageId, pendingId);
+          if (editMessageId)
+            void queryClient.invalidateQueries({ queryKey: ["messages", meta.conversationId] });
           setPendingMessages((current) =>
             current.map((pending) =>
               pending.id === pendingId
@@ -250,10 +322,17 @@ function ChatContent() {
             setActiveConversation(meta.conversationId);
           }
         }
-        if (buffer) {
-          answer += buffer;
-          buffer = "";
-          setLiveAnswer(answer);
+        let newline: number;
+        while ((newline = buffer.indexOf("\n")) !== -1) {
+          const line = buffer.slice(0, newline);
+          buffer = buffer.slice(newline + 1);
+          if (!line.trim()) continue;
+          const event = JSON.parse(line) as { type: string; content?: string; message?: string };
+          if (event.type === "error") throw new Error(event.message || t("发送失败，请稍后重试"));
+          if (event.type === "delta") {
+            answer += event.content ?? "";
+            setLiveAnswer(answer);
+          }
         }
       }
       if (resolvedConversationId) {
@@ -261,15 +340,55 @@ function ChatContent() {
         await queryClient.invalidateQueries({
           queryKey: ["messages", resolvedConversationId],
         });
+        const updated =
+          queryClient.getQueryData<Message[]>(["messages", resolvedConversationId]) ?? [];
+        const index = updated.findIndex((item) => item.id === resolvedUserMessageId);
+        const replacement = index >= 0 ? updated[index + 1] : undefined;
+        if (replacement?.role === "assistant") {
+          if (!editMessageId) renderIds.current.set(replacement.id, liveRenderId.current);
+          setSettledMessageAnchor({
+            id: resolvedUserMessageId ?? replacement.id,
+            conversationId: resolvedConversationId,
+          });
+          if (editMessageId)
+            setHighlightedAnswer((previous) => ({
+              ids: [editMessageId, replacement.id],
+              revision: (previous?.revision ?? 0) + 1,
+            }));
+        } else if (resolvedUserMessageId) {
+          setSettledMessageAnchor({
+            id: resolvedUserMessageId,
+            conversationId: resolvedConversationId,
+          });
+        }
       }
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       setPendingMessages((current) => current.filter((pending) => pending.id !== pendingId));
     } catch (error) {
+      void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      if (!abort.signal.aborted)
+        toast.error(
+          t(
+            error instanceof Error && error.message !== "network error"
+              ? error.message
+              : "发送失败，请稍后重试",
+          ),
+        );
+      if (resolvedConversationId) {
+        await queryClient.invalidateQueries({ queryKey: ["messages", resolvedConversationId] });
+        if (resolvedUserMessageId)
+          setSettledMessageAnchor({
+            id: resolvedUserMessageId,
+            conversationId: resolvedConversationId,
+          });
+      }
+      // Keep the optimistic anchor until its persisted replacement has loaded.
       setPendingMessages((current) => current.filter((pending) => pending.id !== pendingId));
-      setSendError(error instanceof Error ? error.message : t("发送失败，请稍后重试"));
     } finally {
+      if (abortRequest.current === abort) abortRequest.current = null;
       setStreaming(false);
       setLiveAnswer("");
+      setEditingTurn(null);
     }
   }
   return (
@@ -277,7 +396,23 @@ function ChatContent() {
       <MobileNewConversationButton />
       <div className="flex min-h-0 flex-1">
         <div className="flex min-w-0 flex-1 flex-col">
-          <MessageScroller.Provider autoScroll defaultScrollPosition="last-anchor">
+          <MessageScroller.Provider
+            autoScroll={false}
+            defaultScrollPosition="last-anchor"
+            scrollPreviousItemPeek={0}
+          >
+            <ScrollToSentMessage
+              messageId={
+                streaming && editingTurn
+                  ? (renderIds.current.get(editingTurn.questionId) ?? editingTurn.questionId)
+                  : (visiblePendingMessages.at(-1)?.id ??
+                    (settledMessageAnchor?.conversationId === activeConversationId
+                      ? (renderIds.current.get(settledMessageAnchor.id) ?? settledMessageAnchor.id)
+                      : undefined))
+              }
+              align="start"
+              revision={editingTurn ? 0 : highlightedAnswer?.revision}
+            />
             <MessageScroller.Root className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
               <MessageScroller.Viewport
                 id="chat-messages"
@@ -314,36 +449,46 @@ function ChatContent() {
                       </div>
                     </MessageScroller.Item>
                   )}
-                  {!isHistoryLoading &&
-                    visibleHistory.map((message) => (
+                  {(!isHistoryLoading || visiblePendingMessages.length > 0) &&
+                    (
+                      [
+                        ...visibleHistory,
+                        ...visiblePendingMessages,
+                        ...(streaming && !editingTurn
+                          ? [{ id: "live", role: "assistant" as const, content: liveAnswer }]
+                          : []),
+                      ] as Message[]
+                    ).map((message) => (
                       <MessageScroller.Item
-                        key={message.id}
-                        messageId={message.id}
+                        key={
+                          message.id === "live"
+                            ? liveRenderId.current
+                            : (renderIds.current.get(message.id) ?? message.id)
+                        }
+                        messageId={
+                          message.id === "live"
+                            ? liveRenderId.current
+                            : (renderIds.current.get(message.id) ?? message.id)
+                        }
                         scrollAnchor={message.role === "user"}
                       >
-                        <MessageBubble message={message} onPreviewCitations={openCitationPanel} />
-                      </MessageScroller.Item>
-                    ))}
-                  {visiblePendingMessages.map((message) => (
-                    <MessageScroller.Item key={message.id} messageId={message.id} scrollAnchor>
-                      <MessageBubble message={message} onPreviewCitations={openCitationPanel} />
-                    </MessageScroller.Item>
-                  ))}
-                  {streaming && (
-                    <MessageScroller.Item messageId="live-answer">
-                      <div className="animate-in fade-in-0 duration-300">
                         <MessageBubble
-                          message={{ id: "live", role: "assistant", content: liveAnswer }}
+                          message={message}
+                          highlightRevision={
+                            editingTurn &&
+                            (message.id === editingTurn.questionId ||
+                              message.id === editingTurn.answerId ||
+                              message.id === "live")
+                              ? 0
+                              : highlightedAnswer?.ids.includes(message.id)
+                                ? highlightedAnswer.revision
+                                : undefined
+                          }
+                          onEdit={streaming ? undefined : (content) => send(content, message.id)}
                           onPreviewCitations={openCitationPanel}
                         />
-                      </div>
-                    </MessageScroller.Item>
-                  )}
-                  {sendError && (
-                    <MessageScroller.Item messageId="send-error">
-                      <p className="text-center text-sm text-destructive">{sendError}</p>
-                    </MessageScroller.Item>
-                  )}
+                      </MessageScroller.Item>
+                    ))}
                 </MessageScroller.Content>
               </MessageScroller.Viewport>
               <MessageScroller.Button className="absolute bottom-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-background px-3 py-1.5 text-xs font-medium shadow-sm inert:hidden">
@@ -429,7 +574,7 @@ function ChatContent() {
                       <TooltipHint
                         content={
                           streaming
-                            ? t("正在生成回复，请稍候")
+                            ? t("停止生成")
                             : !input.trim()
                               ? t("请输入文本")
                               : t("发送消息 · Enter 发送，Shift+Enter 换行")
@@ -440,15 +585,21 @@ function ChatContent() {
                           tabIndex={streaming || !input.trim() ? 0 : undefined}
                         >
                           <InputGroupButton
-                            type="submit"
+                            type={streaming ? "button" : "submit"}
+                            onClick={streaming ? () => abortRequest.current?.abort() : undefined}
                             variant="default"
-                            disabled={streaming || !input.trim()}
+                            disabled={!streaming && !input.trim()}
                             size="icon-sm"
+                            data-generating={streaming ? "true" : undefined}
                             className="chat-composer-send size-10 shrink-0 rounded-full shadow-none"
-                            aria-label={t("发送消息")}
+                            aria-label={streaming ? t("停止生成") : t("发送消息")}
                             aria-keyshortcuts="Enter"
                           >
-                            <ArrowUp data-icon="inline-start" />
+                            {streaming ? (
+                              <Square data-icon="inline-start" className="fill-current" />
+                            ) : (
+                              <ArrowUp data-icon="inline-start" />
+                            )}
                           </InputGroupButton>
                         </span>
                       </TooltipHint>
@@ -521,12 +672,18 @@ function createPendingMessageId() {
 function MessageBubble({
   message,
   onPreviewCitations,
+  onEdit,
+  highlightRevision,
 }: {
   message: Message;
+  highlightRevision?: number;
+  onEdit?: (content: string) => Promise<void>;
   onPreviewCitations: (citations: CitationChunk[], documentId: string) => void;
 }) {
   const { t } = useI18n();
   const isUser = message.role === "user";
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(message.content);
   const [copied, setCopied] = useState(false);
   const copiedTimerRef = useRef<number | null>(null);
   useEffect(() => {
@@ -561,16 +718,65 @@ function MessageBubble({
         {isUser ? <UserIcon className="size-4" /> : <Bot className="size-4" />}
       </div>
       <div
-        className={`flex min-w-0 max-w-[85%] flex-col sm:max-w-[80%] ${isUser ? "items-end" : "items-start"}`}
+        className={cn(
+          "flex min-w-0 flex-col",
+          editing ? "w-full max-w-xl" : "max-w-[85%] sm:max-w-[80%]",
+          isUser ? "items-end" : "items-start",
+        )}
       >
         <div
-          className={`min-w-0 rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm ${
-            isUser
-              ? "rounded-tr-md bg-primary text-primary-foreground"
-              : "rounded-tl-md bg-card text-foreground"
-          }`}
+          className={cn(
+            "min-w-0 scroll-my-8 rounded-2xl text-sm leading-6 shadow-sm transition-shadow duration-500 motion-reduce:transition-none",
+            highlightRevision !== undefined && "ring-2 ring-primary/60 shadow-lg shadow-primary/10",
+            editing
+              ? "w-full border border-border bg-card p-4 text-foreground"
+              : isUser
+                ? "rounded-tr-md bg-primary px-4 py-3 text-primary-foreground"
+                : "rounded-tl-md bg-card px-4 py-3 text-foreground",
+          )}
         >
-          {isUser ? (
+          {editing ? (
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <Pencil className="size-3.5" aria-hidden="true" />
+                {t("编辑问题")}
+              </div>
+              <Textarea
+                autoFocus
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setEditing(false);
+                }}
+                aria-label={t("编辑问题")}
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                maxLength={20000}
+                rows={3}
+                className="min-h-28 resize-y"
+              />
+              <div className="flex flex-col gap-3 border-t border-border pt-3">
+                <p className="text-xs leading-5 text-muted-foreground">
+                  {t("保存后将替换原问题并重新生成回答。")}
+                </p>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
+                    {t("取消")}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={!draft.trim() || !onEdit || draft.trim() === message.content.trim()}
+                    onClick={() => {
+                      setEditing(false);
+                      void onEdit?.(draft.trim());
+                    }}
+                  >
+                    <Check data-icon="inline-start" />
+                    {t("保存并重新生成")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : isUser ? (
             <p className="whitespace-pre-wrap break-words">{message.content}</p>
           ) : message.content ? (
             <MessageMarkdown content={message.content} />
@@ -581,19 +787,36 @@ function MessageBubble({
             <CitationPreview citations={message.citations} onSelect={onPreviewCitations} />
           )}
         </div>
-        {message.id !== "live" && (
+        {message.id !== "live" && !editing && (
           <div className="mt-1 flex items-center gap-1.5 opacity-100 transition-opacity duration-200 md:opacity-0 md:group-hover/message:opacity-100 md:group-focus-within/message:opacity-100">
             {message.createdAt && (
               <span className="tabular-nums text-xs text-muted-foreground">
                 {formatMessageTime(message.createdAt)}
               </span>
             )}
+            {isUser && onEdit && (
+              <TooltipHint content={t("编辑问题")}>
+                <Button
+                  type="button"
+                  className="size-7 rounded-lg text-muted-foreground/60 hover:text-muted-foreground"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("编辑问题")}
+                  onClick={() => {
+                    setDraft(message.content);
+                    setEditing(true);
+                  }}
+                >
+                  <Pencil />
+                </Button>
+              </TooltipHint>
+            )}
             <TooltipHint content={copied ? t("已复制") : t("复制消息")}>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-7 rounded-lg text-muted-foreground"
+                className="size-7 rounded-lg text-muted-foreground/60 hover:text-muted-foreground"
                 onClick={() => void copyMessage()}
                 aria-label={copied ? t("消息已复制") : t("复制消息")}
               >
@@ -607,23 +830,21 @@ function MessageBubble({
   );
 }
 /** 消息气泡里的引用来源列表：点击后在右侧预览面板打开对应文档。 */
-/** AI 思考中指示器：三点错峰弹跳，动画只动 transform/opacity，尊重减弱动效偏好。 */
+/** 回答生成前显示多行骨架占位，并尊重减弱动效偏好。 */
 function ThinkingIndicator() {
   const { t } = useI18n();
   return (
-    <span
-      className="inline-flex items-center gap-1 py-1.5"
+    <div
+      className="flex w-[min(24rem,55vw)] flex-col gap-3 py-2"
       role="status"
       aria-label={t("正在思考")}
     >
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className="thinking-dot size-1.5 rounded-full bg-foreground/70"
-          style={{ animationDelay: `${i * 180}ms` }}
-        />
-      ))}
-    </span>
+      <div aria-hidden="true" className="flex flex-col gap-3">
+        <Skeleton className="h-3 w-4/5 motion-reduce:animate-none" />
+        <Skeleton className="h-3 w-full motion-reduce:animate-none" />
+        <Skeleton className="h-3 w-3/5 motion-reduce:animate-none" />
+      </div>
+    </div>
   );
 }
 function CitationPreview({
@@ -739,4 +960,37 @@ function ChatHistorySkeleton() {
       })}
     </div>
   );
+}
+
+/** Explicit sends must re-enable scrolling even after the user browsed older messages. */
+function ScrollToSentMessage({
+  messageId,
+  align = "start",
+  revision,
+}: {
+  revision?: number;
+  messageId?: string;
+  align?: "start" | "nearest";
+}) {
+  const { scrollToMessage } = useMessageScroller();
+  const lastTarget = useRef<{ messageId: string; align: string } | null>(null);
+  useEffect(() => {
+    if (!messageId) return;
+    if (
+      revision === undefined &&
+      lastTarget.current?.messageId === messageId &&
+      lastTarget.current.align === align
+    )
+      return;
+    lastTarget.current = { messageId, align };
+    const frame = window.requestAnimationFrame(() => {
+      scrollToMessage(messageId, {
+        align,
+        scrollMargin: 24,
+        behavior: "instant",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [messageId, align, revision, scrollToMessage]);
+  return null;
 }

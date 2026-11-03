@@ -63,7 +63,12 @@ const FIELDS: Array<{
     label: "Embedding Base URL",
     hint: "OpenAI 兼容根路径即可（如 https://api.siliconflow.cn/v1），不要带 /embeddings 后缀",
   },
-  { key: "embeddingApiKey", label: "Embedding API Key", hint: "", secret: true },
+  {
+    key: "embeddingApiKey",
+    label: "Embedding API Key",
+    hint: "直接传给 LangChain 初始化；本地模型可留空",
+    secret: true,
+  },
 ];
 const MODEL_GROUPS = [
   {

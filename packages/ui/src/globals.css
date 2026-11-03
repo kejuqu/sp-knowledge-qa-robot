@@ -372,3 +372,57 @@ html[data-panel-resizing] body {
 [data-product-tour] button:hover {
   background-color: #0d422c;
 }
+
+/* Quiet error notifications with an inset close control. */
+.kqa-toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: var(--width);
+  max-width: calc(100vw - 32px);
+  padding: 16px 44px 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 18%);
+}
+
+[data-sonner-toast].kqa-toast .kqa-toast-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  left: auto;
+  transform: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+[data-sonner-toast].kqa-toast .kqa-toast-close:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+.chat-composer .chat-composer-send[data-generating="true"] {
+  background: var(--foreground);
+  color: var(--background);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.chat-composer .chat-composer-send[data-generating="true"]:hover {
+  background: color-mix(in oklab, var(--foreground) 85%, var(--background));
+}
+
+.chat-composer .chat-composer-send[data-generating="true"] svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 0;
+}

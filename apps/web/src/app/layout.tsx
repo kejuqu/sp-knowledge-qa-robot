@@ -6,6 +6,7 @@ import "@kqa/ui/globals.css";
 import "@kqa/i18n/styles.css";
 import Script from "next/script";
 import { THEME_SCRIPT } from "@kqa/ui/components/theme-script";
+import { Toaster } from "@kqa/ui/components/sonner";
 import { Providers } from "./providers";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -36,7 +37,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-screen antialiased">
         <NextIntlClientProvider>
           <UIStringsProvider labels={labels}>
-            <Providers>{children}</Providers>
+            <Providers>
+              {children}
+              <Toaster />
+            </Providers>
           </UIStringsProvider>
         </NextIntlClientProvider>
       </body>

@@ -417,5 +417,9 @@
   "m7162da698ca1": "Local development: the verification email is in the test inbox, not your real mailbox. Open the inbox, find the message for this address, and click the verification link.",
   "mda54ec56f24b": "Open local test inbox",
   "m99232cddba71": "Go to sign in",
-  "m4c7bdb6294cc": "Use another email"
+  "m4c7bdb6294cc": "Use another email",
+  "m9ad0aac32ea3": "Stop generating",
+  "m198df8806eb7": "Edit question",
+  "md84e8d310ea1": "Saving replaces the original question and regenerates its answer.",
+  "mba2c1b372a9d": "Save and regenerate"
 }
