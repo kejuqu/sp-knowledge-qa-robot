@@ -794,6 +794,18 @@ function MessageBubble({
                 {formatMessageTime(message.createdAt)}
               </span>
             )}
+            <TooltipHint content={copied ? t("已复制") : t("复制消息")}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7 rounded-lg text-muted-foreground/60 hover:text-muted-foreground"
+                onClick={() => void copyMessage()}
+                aria-label={copied ? t("消息已复制") : t("复制消息")}
+              >
+                {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
+              </Button>
+            </TooltipHint>
             {isUser && onEdit && (
               <TooltipHint content={t("编辑问题")}>
                 <Button
@@ -811,18 +823,6 @@ function MessageBubble({
                 </Button>
               </TooltipHint>
             )}
-            <TooltipHint content={copied ? t("已复制") : t("复制消息")}>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-7 rounded-lg text-muted-foreground/60 hover:text-muted-foreground"
-                onClick={() => void copyMessage()}
-                aria-label={copied ? t("消息已复制") : t("复制消息")}
-              >
-                {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
-              </Button>
-            </TooltipHint>
           </div>
         )}
       </div>
