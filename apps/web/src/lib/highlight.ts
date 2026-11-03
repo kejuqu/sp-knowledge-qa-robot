@@ -35,11 +35,7 @@ function normalizeWithMap(source: string): { text: string; map: number[] } {
 }
 
 /** 把归一化空间的命中区间映射回原下标区间（[start, end)）。 */
-function toOriginalRange(
-  map: number[],
-  start: number,
-  end: number
-): [number, number] {
+function toOriginalRange(map: number[], start: number, end: number): [number, number] {
   return [map[start], map[end - 1] + 1];
 }
 
@@ -113,7 +109,8 @@ export function buildHighlightSegments(source: string, needles: string[]): Highl
   let cursor = 0;
   for (const [start, end] of merged) {
     const [origStart, origEnd] = toOriginalRange(map, start, end);
-    if (origStart > cursor) segments.push({ text: source.slice(cursor, origStart), highlight: false });
+    if (origStart > cursor)
+      segments.push({ text: source.slice(cursor, origStart), highlight: false });
     segments.push({ text: source.slice(origStart, origEnd), highlight: true });
     cursor = origEnd;
   }

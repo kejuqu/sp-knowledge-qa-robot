@@ -23,18 +23,27 @@ export function hasPermission(access: Access, permission: Permission): boolean {
 }
 
 export function isPermissionList(value: unknown): value is Permission[] {
-  return Array.isArray(value) && value.every((key) => PERMISSIONS.some((item) => item.key === key))
-    && new Set(value).size === value.length;
+  return (
+    Array.isArray(value) &&
+    value.every((key) => PERMISSIONS.some((item) => item.key === key)) &&
+    new Set(value).size === value.length
+  );
 }
 
 /** 分配者只能授予自己拥有的权限，防止受限管理员自行提权。 */
 export function canGrantAccess(actor: Access, target: Access): boolean {
-  return hasPermission(actor, "roles.manage")
-    && effectivePermissions(target).every((permission) => hasPermission(actor, permission));
+  return (
+    hasPermission(actor, "roles.manage") &&
+    effectivePermissions(target).every((permission) => hasPermission(actor, permission))
+  );
 }
 
 export function isTeamAdministrator(access: Access): boolean {
-  return access.role === "admin" && hasPermission(access, "team.manage") && hasPermission(access, "roles.manage");
+  return (
+    access.role === "admin" &&
+    hasPermission(access, "team.manage") &&
+    hasPermission(access, "roles.manage")
+  );
 }
 
 /** 与迁移中的名称键规则一致：忽略首尾空格、连续空白及字母大小写。 */

@@ -8,14 +8,48 @@ import { convertDocxToHtml } from "./parsers";
  */
 const PREVIEW_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
   allowedTags: [
-    "p", "br", "hr",
-    "div", "span", "section", "article", "header", "footer", "main", "dl", "dt", "dd",
-    "h1", "h2", "h3", "h4", "h5", "h6",
-    "ul", "ol", "li",
-    "blockquote", "pre", "code",
-    "strong", "em", "s", "sub", "sup",
-    "table", "thead", "tbody", "tr", "th", "td", "colgroup", "col", "caption",
-    "img", "figure", "figcaption",
+    "p",
+    "br",
+    "hr",
+    "div",
+    "span",
+    "section",
+    "article",
+    "header",
+    "footer",
+    "main",
+    "dl",
+    "dt",
+    "dd",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "ul",
+    "ol",
+    "li",
+    "blockquote",
+    "pre",
+    "code",
+    "strong",
+    "em",
+    "s",
+    "sub",
+    "sup",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
+    "colgroup",
+    "col",
+    "caption",
+    "img",
+    "figure",
+    "figcaption",
   ],
   allowedAttributes: {
     img: ["src", "alt"],
@@ -32,7 +66,8 @@ const PREVIEW_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
  * CSP 双保险：即使消毒有遗漏，iframe 内也无法发起请求或执行脚本。
  * style 仅限行内，配合下方基础排版样式使用。
  */
-const PREVIEW_CSP = "default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'";
+const PREVIEW_CSP =
+  "default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'";
 
 /** 供 HTTP 响应头使用的同款 CSP（iframe srcdoc 场景由 meta 生效）。 */
 export const DOCX_PREVIEW_CSP = PREVIEW_CSP;

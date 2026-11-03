@@ -6,4 +6,6 @@ export const NOTIFICATION_ROUTES = {
   join_approved: "/documents",
   join_rejected: "/membership",
   access_updated: "/account",
+  document_ready: "/documents",
+  document_failed: "/documents",
 } satisfies Record<NotificationType, string>;

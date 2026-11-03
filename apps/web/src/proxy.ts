@@ -23,14 +23,11 @@ export async function proxy(request: NextRequest) {
     request.headers.has("authorization")
   )
     return NextResponse.next();
-  if (request.nextUrl.pathname === "/api/internal/ingest")
-    return NextResponse.next();
+  if (request.nextUrl.pathname === "/api/internal/ingest") return NextResponse.next();
   let response = NextResponse.next({ request });
   const url = process.env.SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
-  if (!url || !key)
-    return NextResponse.json({ error: "Supabase 尚未配置" }, { status: 503 });
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
+  if (!url || !key) return NextResponse.json({ error: "Supabase 尚未配置" }, { status: 503 });
   assertSupabaseTarget(url);
   const client = createServerClient(url, key, {
     cookieOptions: {
@@ -45,9 +42,7 @@ export async function proxy(request: NextRequest) {
       setAll(values) {
         values.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
-        values.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options),
-        );
+        values.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },
   });
@@ -58,10 +53,7 @@ export async function proxy(request: NextRequest) {
   const denied = request.nextUrl.pathname.startsWith("/api/")
     ? NextResponse.json({ error: "unauthorized" }, { status: 401 })
     : NextResponse.redirect(
-        new URL(
-          "/signin",
-          process.env.AUTH_APP_URL ?? "http://auth.lvh.me:3001",
-        ),
+        new URL("/signin", process.env.AUTH_APP_URL ?? "http://auth.lvh.me:3001"),
       );
   response.cookies.getAll().forEach((cookie) => denied.cookies.set(cookie));
   return denied;

@@ -251,7 +251,6 @@ docker exec -it kqa-redis redis-cli
 > monitor                          -- 实时查看所有 Redis 命令（调试用）
 ```
 
-
 或者
 
 在 VS Code 扩展商店搜索 [Database Client](https://marketplace.visualstudio.com/items?itemName=cweijan.vscode-database-client2)（图标是一个数据库图案），安装后左侧活动栏会出现数据库图标。

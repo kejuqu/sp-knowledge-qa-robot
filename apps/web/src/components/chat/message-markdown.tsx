@@ -12,7 +12,9 @@ export function MessageMarkdown({ content }: { content: string }) {
         components={{
           table: ({ children }) => (
             <div className="my-3 max-w-full overflow-x-auto rounded-lg border border-border">
-              <table className="w-full border-collapse text-left text-sm [&_th]:border-b [&_th]:border-border [&_th]:bg-muted [&_th]:px-3 [&_th]:py-2 [&_th]:font-semibold [&_td]:border-b [&_td]:border-border [&_td]:px-3 [&_td]:py-2 [&_tr:last-child_td]:border-b-0">{children}</table>
+              <table className="w-full border-collapse text-left text-sm [&_th]:border-b [&_th]:border-border [&_th]:bg-muted [&_th]:px-3 [&_th]:py-2 [&_th]:font-semibold [&_td]:border-b [&_td]:border-border [&_td]:px-3 [&_td]:py-2 [&_tr:last-child_td]:border-b-0">
+                {children}
+              </table>
             </div>
           ),
         }}

@@ -1,5 +1,12 @@
 /** 新增通知时在此添加 type 及其对应的数据结构；此模块可安全用于客户端。 */
-export const NOTIFICATION_TYPES = ["join_request", "join_approved", "join_rejected", "access_updated"] as const;
+export const NOTIFICATION_TYPES = [
+  "join_request",
+  "join_approved",
+  "join_rejected",
+  "access_updated",
+  "document_ready",
+  "document_failed",
+] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 type Actor = { id: string; name: string };
@@ -27,6 +34,15 @@ export interface NotificationBodyMap {
     message: string;
     changedBy: Actor;
     access: Access;
+  };
+  document_ready: {
+    message: string;
+    filename: string;
+  };
+  document_failed: {
+    message: string;
+    filename: string;
+    error: string;
   };
 }
 

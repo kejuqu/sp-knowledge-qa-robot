@@ -21,7 +21,11 @@ export function signUploadTicket(ticket: UploadTicket) {
   return `${payload}.${signature(payload).toString("base64url")}`;
 }
 
-export function verifyUploadTicket(value: unknown, userId: string, tenantId: string): UploadTicket | null {
+export function verifyUploadTicket(
+  value: unknown,
+  userId: string,
+  tenantId: string,
+): UploadTicket | null {
   if (typeof value !== "string" || value.length > 4096) return null;
   const parts = value.split(".");
   if (parts.length !== 2) return null;
@@ -31,11 +35,23 @@ export function verifyUploadTicket(value: unknown, userId: string, tenantId: str
   if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return null;
   try {
     const ticket = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as UploadTicket;
-    if (ticket.userId !== userId || ticket.tenantId !== tenantId ||
-      !Number.isFinite(ticket.expiresAt) || ticket.expiresAt <= Date.now() ||
-      typeof ticket.filename !== "string" || !ticket.filename || ticket.filename.length > 255 ||
-      typeof ticket.id !== "string" || !/^[a-f0-9-]{36}$/.test(ticket.id) ||
-      !Number.isSafeInteger(ticket.size) || ticket.size <= 0 || ticket.size > MAX_DOCUMENT_BYTES) return null;
+    if (
+      ticket.userId !== userId ||
+      ticket.tenantId !== tenantId ||
+      !Number.isFinite(ticket.expiresAt) ||
+      ticket.expiresAt <= Date.now() ||
+      typeof ticket.filename !== "string" ||
+      !ticket.filename ||
+      ticket.filename.length > 255 ||
+      typeof ticket.id !== "string" ||
+      !/^[a-f0-9-]{36}$/.test(ticket.id) ||
+      !Number.isSafeInteger(ticket.size) ||
+      ticket.size <= 0 ||
+      ticket.size > MAX_DOCUMENT_BYTES
+    )
+      return null;
     return ticket;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }

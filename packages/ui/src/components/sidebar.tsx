@@ -29,11 +29,7 @@ function clampWidth(width: number) {
   return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, width));
 }
 
-function SidebarProvider({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"div">) {
+function SidebarProvider({ className, children, ...props }: React.ComponentProps<"div">) {
   const [collapsed, setCollapsed] = React.useState(false);
   const [width, setWidthState] = React.useState(DEFAULT_WIDTH);
   const [isMobile, setIsMobile] = React.useState(false);
@@ -89,16 +85,11 @@ function SidebarProvider({
 
 function useSidebar() {
   const context = React.useContext(SidebarContext);
-  if (!context)
-    throw new Error("Sidebar components must be used within SidebarProvider.");
+  if (!context) throw new Error("Sidebar components must be used within SidebarProvider.");
   return context;
 }
 
-function Sidebar({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"aside">) {
+function Sidebar({ className, children, ...props }: React.ComponentProps<"aside">) {
   const { collapsed, width, isMobile, mobileOpen } = useSidebar();
 
   return (
@@ -120,13 +111,7 @@ function Sidebar({
 }
 
 function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="sidebar-header"
-      className={cn("shrink-0", className)}
-      {...props}
-    />
-  );
+  return <div data-slot="sidebar-header" className={cn("shrink-0", className)} {...props} />;
 }
 
 function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
@@ -140,32 +125,18 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="sidebar-footer"
-      className={cn("shrink-0", className)}
-      {...props}
-    />
-  );
+  return <div data-slot="sidebar-footer" className={cn("shrink-0", className)} {...props} />;
 }
 
 function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      data-slot="sidebar-group"
-      className={cn("flex flex-col gap-1", className)}
-      {...props}
-    />
+    <div data-slot="sidebar-group" className={cn("flex flex-col gap-1", className)} {...props} />
   );
 }
 
 function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
   return (
-    <ul
-      data-slot="sidebar-menu"
-      className={cn("flex flex-col gap-1", className)}
-      {...props}
-    />
+    <ul data-slot="sidebar-menu" className={cn("flex flex-col gap-1", className)} {...props} />
   );
 }
 
@@ -176,8 +147,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 /** A middle rail supports both pointer resizing and one-click collapse/expand. */
 function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
   const labels = useUIStrings();
-  const { collapsed, setCollapsed, setWidth, toggleSidebar, width, isMobile } =
-    useSidebar();
+  const { collapsed, setCollapsed, setWidth, toggleSidebar, width, isMobile } = useSidebar();
   const dragStart = React.useRef<{ x: number; width: number } | null>(null);
   const [isResizing, setIsResizing] = React.useState(false);
 
@@ -207,10 +177,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="sidebar-rail"
-      className={cn(
-        "absolute inset-y-0 -right-1 z-20 w-3 cursor-col-resize touch-none",
-        className,
-      )}
+      className={cn("absolute inset-y-0 -right-1 z-20 w-3 cursor-col-resize touch-none", className)}
       onPointerDown={startResize}
       onPointerMove={resize}
       onPointerUp={stopResize}
@@ -239,11 +206,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
           onClick={toggleSidebar}
           aria-label={collapsed ? labels.expandSidebar : labels.collapseSidebar}
         >
-          {collapsed ? (
-            <ChevronsRight className="size-4" />
-          ) : (
-            <ChevronsLeft className="size-4" />
-          )}
+          {collapsed ? <ChevronsRight className="size-4" /> : <ChevronsLeft className="size-4" />}
         </button>
       </TooltipHint>
     </div>
@@ -272,7 +235,13 @@ function SidebarMobileClose() {
   const { isMobile, setMobileOpen } = useSidebar();
   if (!isMobile) return null;
   return (
-    <Button variant="ghost" size="icon" className="size-10 shrink-0 rounded-xl" onClick={() => setMobileOpen(false)} aria-label={labels.closeNavigation}>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="size-10 shrink-0 rounded-xl"
+      onClick={() => setMobileOpen(false)}
+      aria-label={labels.closeNavigation}
+    >
       <X data-icon="inline-start" />
     </Button>
   );
@@ -282,7 +251,14 @@ function SidebarMobileOverlay() {
   const labels = useUIStrings();
   const { isMobile, mobileOpen, setMobileOpen } = useSidebar();
   if (!isMobile || !mobileOpen) return null;
-  return <button type="button" className="fixed inset-0 z-40 bg-foreground/30" onClick={() => setMobileOpen(false)} aria-label={labels.closeOverlay} />;
+  return (
+    <button
+      type="button"
+      className="fixed inset-0 z-40 bg-foreground/30"
+      onClick={() => setMobileOpen(false)}
+      aria-label={labels.closeOverlay}
+    />
+  );
 }
 
 export {

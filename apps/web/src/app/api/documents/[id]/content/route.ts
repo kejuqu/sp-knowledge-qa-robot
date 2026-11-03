@@ -5,16 +5,21 @@ import { renderDocxPreviewHtml, renderSafePreviewHtml, DOCX_PREVIEW_CSP } from "
 import { getPreviewType } from "@/lib/utils";
 import { readDocumentObject } from "@/lib/object-storage";
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getTenantUser();
   if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const client=await getSupabaseServerClient();
-  const [document]=await rows<Document>(client.from("documents").select("*").eq("id",id).eq("tenant_id",user.tenantId).is("deleted_at",null).limit(1));
+  const client = await getSupabaseServerClient();
+  const [document] = await rows<Document>(
+    client
+      .from("documents")
+      .select("*")
+      .eq("id", id)
+      .eq("tenant_id", user.tenantId)
+      .is("deleted_at", null)
+      .limit(1),
+  );
 
   if (!document) {
     return Response.json({ error: "文档不存在" }, { status: 404 });
@@ -26,16 +31,22 @@ export async function GET(
   const isDocx = previewType === "docx";
   const searchParams = new URL(request.url).searchParams;
   if (searchParams.get("format") === "metadata") {
-    return Response.json({ mimeType: document.mimeType }, { headers: { "Cache-Control": "private, no-store" } });
+    return Response.json(
+      { mimeType: document.mimeType },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   }
   const shouldDownload = isHtml || searchParams.get("download") === "1";
-  const disposition = contentDisposition(shouldDownload ? "attachment" : "inline", document.filename);
+  const disposition = contentDisposition(
+    shouldDownload ? "attachment" : "inline",
+    document.filename,
+  );
 
   // HTML 只通过专用预览入口返回清理后的内容；下载仍保留原文件。
   if (isHtml && searchParams.get("format") === "html" && searchParams.get("download") !== "1") {
     try {
       const body = document.objectKey
-        ? await readDocumentObject(document.objectKey,client)
+        ? await readDocumentObject(document.objectKey, client)
         : document.fileData;
       if (!body) return Response.json({ error: "原文件不存在" }, { status: 404 });
       return new Response(renderSafePreviewHtml(Buffer.from(body).toString("utf8")), {
@@ -53,10 +64,14 @@ export async function GET(
   }
 
   // docx 页面内预览：mammoth 转 HTML + 白名单消毒，前端在 sandbox iframe 中渲染
-  if (isDocx && searchParams.get("format") === "html" && (document.objectKey || document.fileData)) {
+  if (
+    isDocx &&
+    searchParams.get("format") === "html" &&
+    (document.objectKey || document.fileData)
+  ) {
     try {
       const body = document.objectKey
-        ? await readDocumentObject(document.objectKey,client)
+        ? await readDocumentObject(document.objectKey, client)
         : document.fileData!;
       const html = await renderDocxPreviewHtml(Buffer.from(body));
       return new Response(html, {
@@ -77,16 +92,27 @@ export async function GET(
   if ((shouldDownload || isPdf) && (document.objectKey || document.fileData)) {
     try {
       if (document.objectKey) {
-        const signed = await result(client.storage.from("kqa-documents").createSignedUrl(
-          document.objectKey, 60, shouldDownload ? { download: document.filename } : {},
-        ));
+        const signed = await result(
+          client.storage
+            .from("kqa-documents")
+            .createSignedUrl(
+              document.objectKey,
+              60,
+              shouldDownload ? { download: document.filename } : {},
+            ),
+        );
         if (!signed) throw new Error("Missing download URL");
-        return new Response(null, { status: 302, headers: {
-          Location: signed.signedUrl, "Cache-Control": "private, no-store", "Referrer-Policy": "no-referrer",
-        } });
+        return new Response(null, {
+          status: 302,
+          headers: {
+            Location: signed.signedUrl,
+            "Cache-Control": "private, no-store",
+            "Referrer-Policy": "no-referrer",
+          },
+        });
       }
       const body = document.objectKey
-        ? await readDocumentObject(document.objectKey,client)
+        ? await readDocumentObject(document.objectKey, client)
         : document.fileData!;
       const responseBody = new Uint8Array(body.byteLength);
       responseBody.set(body);

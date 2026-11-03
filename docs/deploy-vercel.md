@@ -21,17 +21,17 @@
 
 在 Vercel 导入 GitHub 仓库，创建项目：
 
-| 设置 | 值 |
-| --- | --- |
-| Framework Preset | Next.js |
-| Root Directory | `apps/web` |
-| Include source files outside of the Root Directory | 开启（共享包和认证源码位于目录外） |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm build` |
-| Output Directory | 默认 `.next` |
-| Node.js | 22.x |
-| Fluid Compute | 开启，确认 Hobby 的函数最长时间为 300 秒 |
-| Production Branch | 与数据库发布分支一致 |
+| 设置                                               | 值                                       |
+| -------------------------------------------------- | ---------------------------------------- |
+| Framework Preset                                   | Next.js                                  |
+| Root Directory                                     | `apps/web`                               |
+| Include source files outside of the Root Directory | 开启（共享包和认证源码位于目录外）       |
+| Install Command                                    | `pnpm install --frozen-lockfile`         |
+| Build Command                                      | `pnpm build`                             |
+| Output Directory                                   | 默认 `.next`                             |
+| Node.js                                            | 22.x                                     |
+| Fluid Compute                                      | 开启，确认 Hobby 的函数最长时间为 300 秒 |
+| Production Branch                                  | 与数据库发布分支一致                     |
 
 项目根目录 `package.json` 固定了 pnpm 版本；如构建器提示不支持该版本，先核实 Vercel 的 Corepack 支持并按其当前文档开启，不要删锁文件或混用 npm。
 

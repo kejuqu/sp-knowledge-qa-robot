@@ -30,9 +30,14 @@ export function getDefaultModelConfig(): ModelConfig {
 
 /** In local development, document content must stay on loopback unless explicitly enabled. */
 export function assertModelTarget(baseUrl: string) {
-  if (process.env.APP_ENV !== "production" && process.env.ALLOW_REMOTE_AI !== "true"
-    && !["localhost", "127.0.0.1", "::1", "[::1]"].includes(new URL(baseUrl).hostname)) {
-    throw new Error("本地隔离模式仅允许本机模型服务。请配置 Ollama 等本地模型；如需远程模型，先明确启用 ALLOW_REMOTE_AI。");
+  if (
+    process.env.APP_ENV !== "production" &&
+    process.env.ALLOW_REMOTE_AI !== "true" &&
+    !["localhost", "127.0.0.1", "::1", "[::1]"].includes(new URL(baseUrl).hostname)
+  ) {
+    throw new Error(
+      "本地隔离模式仅允许本机模型服务。请配置 Ollama 等本地模型；如需远程模型，先明确启用 ALLOW_REMOTE_AI。",
+    );
   }
 }
 

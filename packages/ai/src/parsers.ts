@@ -7,7 +7,15 @@ import { gfm as gfmPlugin } from "turndown-plugin-gfm";
 
 const gfm = gfmPlugin as (service: TurndownService) => void;
 
-export const SUPPORTED_EXTENSIONS = ["txt", "md", "markdown", "html", "htm", "pdf", "docx"] as const;
+export const SUPPORTED_EXTENSIONS = [
+  "txt",
+  "md",
+  "markdown",
+  "html",
+  "htm",
+  "pdf",
+  "docx",
+] as const;
 
 export function getExtension(filename: string): string {
   return filename.split(".").pop()?.toLowerCase() ?? "";
@@ -78,7 +86,11 @@ function normalizeTables($: cheerio.CheerioAPI) {
  * pdf/txt 抽取结果本身就是合法 Markdown 源，直接用。
  * 解析器按格式插件化，后续 OCR（扫描件 PDF / 图片）在 pdf 分支里加扩展点即可。
  */
-export async function extractText(buffer: Buffer, filename: string, mimeType?: string): Promise<string> {
+export async function extractText(
+  buffer: Buffer,
+  filename: string,
+  mimeType?: string,
+): Promise<string> {
   const extensionByMime: Record<string, string> = {
     "text/plain": "txt",
     "text/markdown": "md",

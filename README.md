@@ -10,12 +10,12 @@
 
 本机已使用独立项目 `knowledge-qa-assistant`，与云端及其他本地 Supabase 项目分开。
 
-| 查看内容 | 打开位置 |
-| --- | --- |
-| 业务表、SQL、Auth 用户 | [本地 Studio](http://127.0.0.1:55323) → Table Editor / SQL Editor / Authentication |
-| pgvector 向量与分块原文 | Studio → Table Editor → `public.document_chunks` |
-| 上传的原文件 | Studio → Storage → `kqa-documents` |
-| 注册验证邮件 | [本地测试收件箱](http://127.0.0.1:55324) |
+| 查看内容                | 打开位置                                                                           |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| 业务表、SQL、Auth 用户  | [本地 Studio](http://127.0.0.1:55323) → Table Editor / SQL Editor / Authentication |
+| pgvector 向量与分块原文 | Studio → Table Editor → `public.document_chunks`                                   |
+| 上传的原文件            | Studio → Storage → `kqa-documents`                                                 |
+| 注册验证邮件            | [本地测试收件箱](http://127.0.0.1:55324)                                           |
 
 如果页面打不开，在仓库根目录运行 `pnpm supabase:start`；开发网页另运行 `pnpm dev`。停止服务用 `pnpm supabase:stop`，会保留本地数据。
 
@@ -43,33 +43,33 @@ pnpm dev
 
 已有 `.env` 的项目跳过复制步骤。云端配置已备份在 Git 忽略的 `.env.cloud.local`；本地开发不要复制回 `.env`。两个应用通过 `apps/auth/.env.local` 和 `apps/web/.env.local` 读取根目录 `.env`；修改后重启开发服务。
 
-| 入口 | 地址 |
-| --- | --- |
-| 本地 Supabase Studio（表 / SQL / Storage / Auth） | http://127.0.0.1:55323 |
-| 本地邮件收件箱（Mailpit） | http://127.0.0.1:55324 |
-| Supabase API | http://127.0.0.1:55321 |
-| PostgreSQL / pgvector | `127.0.0.1:55322`，数据库/用户/密码均为 `postgres` |
-| 注册、登录 | http://auth.lvh.me:3001 |
-| 主应用 | http://app.lvh.me:3100 |
-| 文档上传与预览 | http://app.lvh.me:3100/documents |
-| 问答 | http://app.lvh.me:3100/chat |
-| 模型配置 | http://app.lvh.me:3100/settings |
-| 团队审批与权限 | http://app.lvh.me:3100/team |
+| 入口                                              | 地址                                               |
+| ------------------------------------------------- | -------------------------------------------------- |
+| 本地 Supabase Studio（表 / SQL / Storage / Auth） | http://127.0.0.1:55323                             |
+| 本地邮件收件箱（Mailpit）                         | http://127.0.0.1:55324                             |
+| Supabase API                                      | http://127.0.0.1:55321                             |
+| PostgreSQL / pgvector                             | `127.0.0.1:55322`，数据库/用户/密码均为 `postgres` |
+| 注册、登录                                        | http://auth.lvh.me:3001                            |
+| 主应用                                            | http://app.lvh.me:3100                             |
+| 文档上传与预览                                    | http://app.lvh.me:3100/documents                   |
+| 问答                                              | http://app.lvh.me:3100/chat                        |
+| 模型配置                                          | http://app.lvh.me:3100/settings                    |
+| 团队审批与权限                                    | http://app.lvh.me:3100/team                        |
 
 应用登录页面统一使用 `*.lvh.me`，配合 `COOKIE_DOMAIN=.lvh.me` 共享登录 Cookie。不要在 `localhost` 和 `lvh.me` 之间混用登录地址。
 
 ### 必填配置
 
-| 变量 | 用途 |
-| --- | --- |
-| `APP_ENV` | 本地固定为 `local`；非生产环境会拒绝远程 Supabase 地址 |
-| `SUPABASE_URL` | 本地固定为 `http://127.0.0.1:55321` |
-| `SUPABASE_PUBLISHABLE_KEY` | `supabase:start` 自动生成的本地 publishable / anon key |
-| `SUPABASE_SECRET_KEY` | 自动生成的本地 secret / service_role key，仅服务端使用 |
-| `DIRECT_DATABASE_URL` | 本地 `postgresql://postgres:postgres@127.0.0.1:55322/postgres`，供迁移和测试使用 |
-| `AUTH_APP_URL` / `WEB_APP_URL` | 两个应用的对外地址 |
-| `COOKIE_DOMAIN` | 本地为 `.lvh.me` |
-| `LLM_*` / `EMBEDDING_*` | 对话模型和专用 Embedding 模型，支持 OpenAI 兼容接口 |
+| 变量                           | 用途                                                                             |
+| ------------------------------ | -------------------------------------------------------------------------------- |
+| `APP_ENV`                      | 本地固定为 `local`；非生产环境会拒绝远程 Supabase 地址                           |
+| `SUPABASE_URL`                 | 本地固定为 `http://127.0.0.1:55321`                                              |
+| `SUPABASE_PUBLISHABLE_KEY`     | `supabase:start` 自动生成的本地 publishable / anon key                           |
+| `SUPABASE_SECRET_KEY`          | 自动生成的本地 secret / service_role key，仅服务端使用                           |
+| `DIRECT_DATABASE_URL`          | 本地 `postgresql://postgres:postgres@127.0.0.1:55322/postgres`，供迁移和测试使用 |
+| `AUTH_APP_URL` / `WEB_APP_URL` | 两个应用的对外地址                                                               |
+| `COOKIE_DOMAIN`                | 本地为 `.lvh.me`                                                                 |
+| `LLM_*` / `EMBEDDING_*`        | 对话模型和专用 Embedding 模型，支持 OpenAI 兼容接口                              |
 
 `SUPABASE_SECRET_KEY`、数据库密码、SMTP 密码不能放到 `NEXT_PUBLIC_*` 变量中。业务请求通过 `supabase-js` 访问数据，`DIRECT_DATABASE_URL` 不用于日常 API 查询。
 
@@ -79,17 +79,17 @@ pnpm dev
 
 打开 **http://127.0.0.1:55323** 即可查看本项目数据，不需要访问云端 Dashboard。Table Editor、SQL Editor、Storage 和 Authentication 都在该本地 Studio 中。
 
-| 想查看的内容 | 控制台位置 | 表 / bucket |
-| --- | --- | --- |
-| 登录账号、邮箱确认状态 | Authentication → Users | Supabase Auth 用户 |
-| 用户资料、团队和权限 | Table Editor → `public` | `users`、`tenants`、`tenant_members` |
-| 文档名称、解析文本、处理状态 | Table Editor → `public` | `documents` |
-| 分块原文、向量、模型标识 | Table Editor → `public` | `document_chunks` |
-| 向量化任务、失败原因、重试次数 | Table Editor → `public` | `document_jobs` |
-| 会话和消息 | Table Editor → `public` | `conversations`、`messages` |
-| 团队模型配置 | Table Editor → `public` | `model_settings`，其中含敏感 API key |
-| 原始上传文件 | Storage → Files → `kqa-documents` | 私有 bucket |
-| 用户头像 | Storage → Files → `kqa-avatars` | 私有 bucket |
+| 想查看的内容                   | 控制台位置                        | 表 / bucket                          |
+| ------------------------------ | --------------------------------- | ------------------------------------ |
+| 登录账号、邮箱确认状态         | Authentication → Users            | Supabase Auth 用户                   |
+| 用户资料、团队和权限           | Table Editor → `public`           | `users`、`tenants`、`tenant_members` |
+| 文档名称、解析文本、处理状态   | Table Editor → `public`           | `documents`                          |
+| 分块原文、向量、模型标识       | Table Editor → `public`           | `document_chunks`                    |
+| 向量化任务、失败原因、重试次数 | Table Editor → `public`           | `document_jobs`                      |
+| 会话和消息                     | Table Editor → `public`           | `conversations`、`messages`          |
+| 团队模型配置                   | Table Editor → `public`           | `model_settings`，其中含敏感 API key |
+| 原始上传文件                   | Storage → Files → `kqa-documents` | 私有 bucket                          |
+| 用户头像                       | Storage → Files → `kqa-avatars`   | 私有 bucket                          |
 
 **pgvector 就在 Supabase 的 PostgreSQL 内，没有单独的向量数据库控制台，也不再使用 Attu。** 通过 Table Editor 查看行，通过 SQL Editor 检查向量和召回结果。
 
@@ -223,11 +223,11 @@ pnpm db:migrate           # 已启动后应用新增迁移，跳过已应用版�
 
 首次使用前，在 GitHub 仓库 **Settings → Secrets and variables → Actions → New repository secret** 配置：
 
-| Secret | 内容 |
-| --- | --- |
+| Secret                  | 内容                                                                                                                  |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `SUPABASE_ACCESS_TOKEN` | Supabase 个人访问令牌，建议限定到目标项目；`link` 所需的 Project Settings、API Keys、API Key Secrets 均授予 Read 权限 |
-| `SUPABASE_DB_PASSWORD` | 远程 Supabase 项目的数据库密码，不是 anon / publishable / service_role key |
-| `SUPABASE_PROJECT_REF` | 生产项目引用，即 Dashboard 地址 `/project/<project-ref>` 中的值 |
+| `SUPABASE_DB_PASSWORD`  | 远程 Supabase 项目的数据库密码，不是 anon / publishable / service_role key                                            |
+| `SUPABASE_PROJECT_REF`  | 生产项目引用，即 Dashboard 地址 `/project/<project-ref>` 中的值                                                       |
 
 配置方式参考 [Supabase 官方 GitHub Actions 指南](https://supabase.com/docs/guides/deployment/managing-environments#configure-github-actions)。Secrets 不要写入仓库或开发 `.env`。
 

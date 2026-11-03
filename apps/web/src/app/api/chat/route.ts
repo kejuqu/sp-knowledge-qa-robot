@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   const user = await getTenantUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const client=await getSupabaseServerClient();
+  const client = await getSupabaseServerClient();
   const { conversationId, message, documentIds } = await request.json();
   if (typeof message !== "string" || !message.trim() || message.length > 20000) {
     return NextResponse.json({ error: "message is required" }, { status: 400 });
@@ -23,26 +23,60 @@ export async function POST(request: Request) {
   // 没有会话就新建，标题取问题前 20 字
   let convId = conversationId as string | undefined;
   if (convId) {
-    if (typeof convId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(convId)) {
+    if (
+      typeof convId !== "string" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(convId)
+    ) {
       return NextResponse.json({ error: "invalid id" }, { status: 400 });
     }
-    const conversation=await result(client.from("conversations").select("id").eq("id",convId).eq("owner_id",user.sub).maybeSingle());
+    const conversation = await result(
+      client
+        .from("conversations")
+        .select("id")
+        .eq("id", convId)
+        .eq("owner_id", user.sub)
+        .maybeSingle(),
+    );
     if (!conversation) return NextResponse.json({ error: "对话不存在" }, { status: 404 });
   }
   if (!convId) {
-    const conv=await result(client.from("conversations").insert({owner_id:user.sub,title:message.slice(0,20)}).select("id").single());
+    const conv = await result(
+      client
+        .from("conversations")
+        .insert({ owner_id: user.sub, title: message.slice(0, 20) })
+        .select("id")
+        .single(),
+    );
     if (!conv) throw new Error("无法创建对话");
     convId = conv.id;
   }
 
-  const userMessage=await result(client.from("messages").insert({conversation_id:convId,role:"user",content:message}).select("id").single());
+  const userMessage = await result(
+    client
+      .from("messages")
+      .insert({ conversation_id: convId, role: "user", content: message })
+      .select("id")
+      .single(),
+  );
 
   if (!userMessage) throw new Error("无法保存消息");
   const requestedDocumentIds = Array.isArray(documentIds)
-    ? documentIds.filter((id): id is string => typeof id === "string" && /^[0-9a-f-]{36}$/i.test(id)).slice(0, 50)
+    ? documentIds
+        .filter((id): id is string => typeof id === "string" && /^[0-9a-f-]{36}$/i.test(id))
+        .slice(0, 50)
     : [];
   const permittedDocumentIds = requestedDocumentIds.length
-    ? ((await result(client.from("documents").select("id").eq("tenant_id",user.tenantId).is("deleted_at",null).eq("status","ready").in("id",requestedDocumentIds))) ?? []).map((document)=>document.id)
+    ? (
+        (await result(
+          client
+            .from("documents")
+            .select("id")
+            .eq("tenant_id", user.tenantId)
+            .is("deleted_at", null)
+            .eq("status", "ready")
+            .in("id", requestedDocumentIds),
+        )) ?? []
+      ).map((document) => document.id)
     : [];
   const config = await getModelConfigForTenant(user.tenantId);
   const { stream, citations } = await streamRagAnswer(
@@ -50,14 +84,15 @@ export async function POST(request: Request) {
     user.tenantId,
     config,
     documentIds === undefined ? null : permittedDocumentIds,
-    client
+    client,
   );
 
-  const metaLine = JSON.stringify({
-    conversationId: convId,
-    userMessageId: userMessage.id,
-    citations,
-  }) + "\n";
+  const metaLine =
+    JSON.stringify({
+      conversationId: convId,
+      userMessageId: userMessage.id,
+      citations,
+    }) + "\n";
   const encoder = new TextEncoder();
   const finalConvId = convId;
 
@@ -71,7 +106,11 @@ export async function POST(request: Request) {
           controller.enqueue(encoder.encode(chunk));
         }
         // 流结束后把完整回答落库
-        await result(client.from("messages").insert({conversation_id:finalConvId,role:"assistant",content:full,citations}));
+        await result(
+          client
+            .from("messages")
+            .insert({ conversation_id: finalConvId, role: "assistant", content: full, citations }),
+        );
       } catch (err) {
         controller.error(err);
         return;

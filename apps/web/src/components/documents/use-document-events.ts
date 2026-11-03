@@ -34,8 +34,8 @@ export function useDocumentEvents() {
                     chunkCount: data.chunkCount,
                     error: data.error,
                   }
-                : doc
-            ) ?? old
+                : doc,
+            ) ?? old,
         );
       } catch {
         // 非 JSON 消息忽略
@@ -47,7 +47,7 @@ export function useDocumentEvents() {
         const { id } = JSON.parse(e.data) as { id: string };
         queryClient.setQueryData<Array<Record<string, unknown>>>(
           ["documents"],
-          (old) => old?.filter((doc) => doc.id !== id) ?? old
+          (old) => old?.filter((doc) => doc.id !== id) ?? old,
         );
       } catch {}
     }
@@ -57,7 +57,9 @@ export function useDocumentEvents() {
         const items = JSON.parse((event as MessageEvent).data) as DocumentStatusEvent[];
         const byId = new Map(items.map((item) => [item.id, item]));
         queryClient.setQueryData<Array<Record<string, unknown>>>(["documents"], (old) =>
-          old?.filter((doc) => byId.has(String(doc.id))).map((doc) => ({ ...doc, ...byId.get(String(doc.id)) }))
+          old
+            ?.filter((doc) => byId.has(String(doc.id)))
+            .map((doc) => ({ ...doc, ...byId.get(String(doc.id)) })),
         );
       } catch {}
     });

@@ -8,10 +8,17 @@ import { getModelConfigForTenant } from "@/lib/model-config";
 export async function GET() {
   const user = await getTenantUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  if (!hasPermission(user, "settings.manage")) return NextResponse.json({ error: "没有管理模型配置的权限" }, { status: 403 });
+  if (!hasPermission(user, "settings.manage"))
+    return NextResponse.json({ error: "没有管理模型配置的权限" }, { status: 403 });
   const config = await getModelConfigForTenant(user.tenantId);
   const client = await getSupabaseServerClient();
-  const flags = await result(client.from("model_settings").select("llm_shared,embedding_shared").eq("tenant_id", user.tenantId).maybeSingle());
+  const flags = await result(
+    client
+      .from("model_settings")
+      .select("llm_shared,embedding_shared")
+      .eq("tenant_id", user.tenantId)
+      .maybeSingle(),
+  );
   // apiKey 脱敏回显
   return NextResponse.json({
     ...config,
@@ -33,12 +40,19 @@ export async function PUT(request: Request) {
 
   const body = await request.json();
   for (const key of ["llmShared", "embeddingShared"]) {
-    if (body[key] !== undefined && typeof body[key] !== "boolean") return NextResponse.json({ error: "无效的通用模型开关" }, { status: 400 });
+    if (body[key] !== undefined && typeof body[key] !== "boolean")
+      return NextResponse.json({ error: "无效的通用模型开关" }, { status: 400 });
   }
   // 脱敏值原样回传时不覆盖已存的 key
   const current = await getModelConfigForTenant(user.tenantId);
   const client = await getSupabaseServerClient();
-  const flags = await result(client.from("model_settings").select("llm_shared,embedding_shared").eq("tenant_id", user.tenantId).maybeSingle());
+  const flags = await result(
+    client
+      .from("model_settings")
+      .select("llm_shared,embedding_shared")
+      .eq("tenant_id", user.tenantId)
+      .maybeSingle(),
+  );
   const values = {
     tenantId: user.tenantId,
     llmShared: body.llmShared ?? flags?.llm_shared ?? false,
@@ -52,12 +66,28 @@ export async function PUT(request: Request) {
     updatedAt: new Date(),
   };
 
-  for (const [model, baseUrl, shared] of [[values.llmModel, values.llmBaseUrl, values.llmShared], [values.embeddingModel, values.embeddingBaseUrl, values.embeddingShared]]) {
+  for (const [model, baseUrl, shared] of [
+    [values.llmModel, values.llmBaseUrl, values.llmShared],
+    [values.embeddingModel, values.embeddingBaseUrl, values.embeddingShared],
+  ]) {
     if (shared) {
       try {
         const url = new URL(baseUrl);
-        if (!model.trim() || !["http:", "https:"].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new Error();
-      } catch { return NextResponse.json({ error: "共享模型需填写有效模型名和不包含密钥、查询参数的 HTTP / HTTPS Base URL" }, { status: 400 }); }
+        if (
+          !model.trim() ||
+          !["http:", "https:"].includes(url.protocol) ||
+          url.username ||
+          url.password ||
+          url.search ||
+          url.hash
+        )
+          throw new Error();
+      } catch {
+        return NextResponse.json(
+          { error: "共享模型需填写有效模型名和不包含密钥、查询参数的 HTTP / HTTPS Base URL" },
+          { status: 400 },
+        );
+      }
     }
   }
   await result(client.from("model_settings").upsert(snakeRow(values), { onConflict: "tenant_id" }));

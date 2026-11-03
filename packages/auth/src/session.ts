@@ -59,7 +59,10 @@ export async function signSession(payload: SessionPayload): Promise<string> {
 
 export async function verifySession(token: string): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, getSecret(), { issuer: SESSION_ISSUER, audience: SESSION_AUDIENCE });
+    const { payload } = await jwtVerify(token, getSecret(), {
+      issuer: SESSION_ISSUER,
+      audience: SESSION_AUDIENCE,
+    });
     // 老版本 token（无租户字段）视为无效，强制重新登录
     if (!payload.sub || !payload.tenantId) return null;
 

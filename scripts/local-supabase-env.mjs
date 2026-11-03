@@ -12,8 +12,7 @@ const url =
   status.api_url ||
   (storageUrl ? new URL("/", storageUrl).href.replace(/\/$/, "") : undefined);
 const publicKey = status.PUBLISHABLE_KEY ?? status.ANON_KEY ?? status.anon_key;
-const secretKey =
-  status.SECRET_KEY ?? status.SERVICE_ROLE_KEY ?? status.service_role_key;
+const secretKey = status.SECRET_KEY ?? status.SERVICE_ROLE_KEY ?? status.service_role_key;
 const dbUrl = status.DB_URL ?? status.db_url;
 const missing = Object.entries({
   API_URL: url,
@@ -24,9 +23,7 @@ const missing = Object.entries({
   .filter(([, value]) => !value)
   .map(([key]) => key);
 if (missing.length)
-  throw new Error(
-    `Supabase status 未返回完整本地连接配置，缺少：${missing.join(", ")}`,
-  );
+  throw new Error(`Supabase status 未返回完整本地连接配置，缺少：${missing.join(", ")}`);
 if (!["127.0.0.1", "localhost"].includes(new URL(url).hostname))
   throw new Error("拒绝将非本地 Supabase 写入开发环境");
 let text = await readFile(".env", "utf8").catch(() => "");
@@ -45,9 +42,7 @@ const values = {
   SUPABASE_SECRET_KEY: secretKey,
   DIRECT_DATABASE_URL: dbUrl,
 };
-const lines = text
-  .split("\n")
-  .filter((line) => !Object.hasOwn(values, line.split("=", 1)[0]));
+const lines = text.split("\n").filter((line) => !Object.hasOwn(values, line.split("=", 1)[0]));
 await writeFile(
   ".env",
   Object.entries(values)

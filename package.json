@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "lint": "turbo run lint",
+    "lint": "eslint .",
     "typecheck": "turbo run typecheck",
     "db:generate": "supabase migration new",
     "db:migrate": "node --env-file=.env scripts/migrate-supabase.mjs",
@@ -16,10 +16,20 @@
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
     "supabase:env": "node scripts/local-supabase-env.mjs",
-    "test:i18n": "node --import tsx --test packages/i18n/tests/i18n.test.ts"
+    "test:i18n": "node --import tsx --test packages/i18n/tests/i18n.test.ts",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.4.3",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.14.0",
+    "prettier": "^3.9.10",
+    "tsx": "4.23.15",
     "turbo": "^2.5.0",
-    "tsx": "4.23.15"
+    "typescript-eslint": "^8.72.1"
   }
 }

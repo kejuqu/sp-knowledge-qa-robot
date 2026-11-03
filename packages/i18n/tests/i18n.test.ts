@@ -11,7 +11,11 @@ test("all locales have complete, nonempty messages and matching parameters", () 
     assert.deepEqual(Object.keys(catalog).sort(), Object.keys(zh).sort());
     for (const key of Object.keys(zh) as Array<keyof typeof zh>) {
       assert.ok(catalog[key].trim(), key);
-      assert.deepEqual([...catalog[key].matchAll(/\{p\d+\}/g)].map(m=>m[0]).sort(), [...zh[key].matchAll(/\{p\d+\}/g)].map(m=>m[0]).sort(), key);
+      assert.deepEqual(
+        [...catalog[key].matchAll(/\{p\d+\}/g)].map((m) => m[0]).sort(),
+        [...zh[key].matchAll(/\{p\d+\}/g)].map((m) => m[0]).sort(),
+        key,
+      );
     }
   }
 });
@@ -22,9 +26,9 @@ test("saved language wins and browser preferences respect quality and region", (
   assert.equal(resolveLocale(undefined, "fr,en;q=0"), "zh");
 });
 test("UI translation interpolates values without translating user data", () => {
-  const t = makeTranslator(key => en[key as keyof typeof en]);
+  const t = makeTranslator((key) => en[key as keyof typeof en]);
   assert.equal(t("上传文档"), "Upload documents");
-  assert.equal(t("查看 {p0}", {p0: "业务流程.pdf"}), "View 业务流程.pdf");
+  assert.equal(t("查看 {p0}", { p0: "业务流程.pdf" }), "View 业务流程.pdf");
   assert.equal(t("qwen3.8-2.4t-a95b"), "qwen3.8-2.4t-a95b");
   assert.equal(t("7天前"), "7 days ago");
 });

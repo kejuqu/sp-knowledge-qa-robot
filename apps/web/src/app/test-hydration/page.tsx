@@ -18,7 +18,12 @@ export default function TestHydrationPage() {
   return (
     <main className="p-8">
       <p data-testid="mounted">{mounted ? "MOUNTED" : "SSR-ONLY"}</p>
-      <button type="button" onClick={() => { window.__CLICKED__ = true; }}>
+      <button
+        type="button"
+        onClick={() => {
+          window.__CLICKED__ = true;
+        }}
+      >
         点击我
       </button>
     </main>

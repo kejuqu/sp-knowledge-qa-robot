@@ -151,10 +151,12 @@ body {
 /* 统一操作控件的默认光标，拖拽等显式 cursor 工具类仍可覆盖。 */
 @layer base {
   /* Tailwind v4 的默认边框为 currentColor，统一使用主题色，工具类仍可覆盖。 */
-  *, ::before, ::after, ::backdrop {
+  *,
+  ::before,
+  ::after,
+  ::backdrop {
     border-color: var(--theme-border);
   }
-
 
   :where(
     button,
@@ -162,7 +164,16 @@ body {
     summary,
     select,
     label[for],
-    input:is([type="button"], [type="submit"], [type="reset"], [type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="color"]),
+    input:is(
+      [type="button"],
+      [type="submit"],
+      [type="reset"],
+      [type="checkbox"],
+      [type="radio"],
+      [type="file"],
+      [type="range"],
+      [type="color"]
+    ),
     [role="button"],
     [role="link"],
     [role="tab"],
@@ -211,7 +222,9 @@ html[data-panel-resizing] body {
 }
 
 @keyframes thinking-bounce {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
     opacity: 0.45;
   }
@@ -241,7 +254,8 @@ html[data-panel-resizing] body {
 }
 
 @keyframes empty-glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.5;
     transform: scale(1);
   }
@@ -337,4 +351,24 @@ html[data-panel-resizing] body {
   width: 20px;
   height: 20px;
   stroke-width: 2;
+}
+
+/* Slightly translucent tour surface; copy stays fully opaque. */
+:root {
+  --tour-background: rgb(23 107 73 / 94%);
+  --tour-foreground: #ffffff;
+}
+
+[data-product-tour] {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+[data-product-tour] button {
+  background-color: #125338;
+  color: var(--tour-foreground);
+}
+
+[data-product-tour] button:hover {
+  background-color: #0d422c;
 }

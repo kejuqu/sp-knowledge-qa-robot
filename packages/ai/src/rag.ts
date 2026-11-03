@@ -59,9 +59,9 @@ export async function streamRagAnswer(
   tenantId: string,
   config: ModelConfig,
   documentIds: string[] | null,
-  client: SupabaseClient
+  client: SupabaseClient,
 ): Promise<{ stream: AsyncIterable<string>; citations: RagCitation[] }> {
-  const results = await searchDocumentVectors(client,question,tenantId,config,documentIds);
+  const results = await searchDocumentVectors(client, question, tenantId, config, documentIds);
   const docs = results.map(([doc]) => doc);
 
   const chain = RunnableSequence.from([

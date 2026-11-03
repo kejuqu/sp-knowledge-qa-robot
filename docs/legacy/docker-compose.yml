@@ -65,7 +65,11 @@ services:
       - miniodata:/minio_data
     healthcheck:
       # 新版 MinIO 镜像里没有 curl/wget，用自带的 mc 探活
-      test: ["CMD-SHELL", "mc alias set local http://localhost:9000 minioadmin minioadmin >/dev/null 2>&1 && mc ready local"]
+      test:
+        [
+          "CMD-SHELL",
+          "mc alias set local http://localhost:9000 minioadmin minioadmin >/dev/null 2>&1 && mc ready local",
+        ]
       interval: 30s
       timeout: 20s
       retries: 3

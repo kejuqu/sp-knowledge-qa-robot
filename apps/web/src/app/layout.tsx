@@ -15,14 +15,30 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { t, locale } = await getI18n();
-  const labels = { close: t("关闭"), resizeSidebar: t("调整侧栏宽度"), expandSidebar: t("展开侧栏"), collapseSidebar: t("收起侧栏"), openNavigation: t("打开导航"), closeNavigation: t("关闭导航"), closeOverlay: t("关闭导航遮罩") };
+  const labels = {
+    close: t("关闭"),
+    resizeSidebar: t("调整侧栏宽度"),
+    expandSidebar: t("展开侧栏"),
+    collapseSidebar: t("收起侧栏"),
+    openNavigation: t("打开导航"),
+    closeNavigation: t("关闭导航"),
+    closeOverlay: t("关闭导航遮罩"),
+  };
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        <Script id="kqa-theme" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <Script
+          id="kqa-theme"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }}
+        />
       </head>
       <body className="min-h-screen antialiased">
-        <NextIntlClientProvider><UIStringsProvider labels={labels}><Providers>{children}</Providers></UIStringsProvider></NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <UIStringsProvider labels={labels}>
+            <Providers>{children}</Providers>
+          </UIStringsProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

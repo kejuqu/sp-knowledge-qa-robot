@@ -102,10 +102,18 @@ export interface EmbeddedChunk {
 }
 
 /** Generate embeddings; the worker commits all chunks and job completion in one RPC transaction. */
-export async function ingestDocument(input: IngestInput, config: ModelConfig): Promise<EmbeddedChunk[]> {
-  const chunks=await splitDocumentText(input.text);
-  if(!chunks.length) return [];
-  const vectors=await createEmbeddings(config).embedDocuments(chunks);
-  validateVectors(vectors,chunks.length);
-  return chunks.map((content,index)=>({chunk_index:index,content,embedding:vectors[index],embedding_model:embeddingIdentity(config)}));
+export async function ingestDocument(
+  input: IngestInput,
+  config: ModelConfig,
+): Promise<EmbeddedChunk[]> {
+  const chunks = await splitDocumentText(input.text);
+  if (!chunks.length) return [];
+  const vectors = await createEmbeddings(config).embedDocuments(chunks);
+  validateVectors(vectors, chunks.length);
+  return chunks.map((content, index) => ({
+    chunk_index: index,
+    content,
+    embedding: vectors[index],
+    embedding_model: embeddingIdentity(config),
+  }));
 }
